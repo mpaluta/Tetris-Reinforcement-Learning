@@ -1,4 +1,6 @@
 import random 
+import json
+import numpy as np
 
 # Size of world
 # names of shapes
@@ -7,9 +9,6 @@ import random
 # reward for each event type
 
 
-# os.path.join(os.path.dirname(__file__), "database.dat")
-class Environment(object):
-    pass
 
 class OrientedShape(object):
     bitmap=None
@@ -64,13 +63,13 @@ class LocatedShape(object):
 
     def __init__(self,loc,shape,oindex):
         self.loc = np.array(loc)
-        assert self.loc.size()==2
+        assert self.loc.size==2
         self.shape = shape
         self.oindex = oindex
         self.oshape = self.shape.oshapes[self.oindex]
 
     def coords(self):
-        return self.oshape.coords()+loc
+        return self.oshape.coords()+self.loc
 
     def move(self,offset):
         return LocatedShape(self.loc+offset,self.shape,self.oindex)
@@ -84,7 +83,7 @@ class LocatedShape(object):
     def right(self):
         return self.move(np.array([0,1]))
 
-    def rotate(self):
+    def clockwise_rotate(self):
         return LocatedShape(self.loc,self.shape,(self.oindex+1)%len(self.shape.oshapes))
 
     def rmin(self):
@@ -100,22 +99,25 @@ class LocatedShape(object):
         return self.oshape.cmax()+self.loc[1]
 
 
-class Bitmap(object):
-"""Bitmap containing arena state"""
-    bits=None
+class Arena(object):
+    """Bitmap containing arena state"""
+    bitmap=None
     
-    def __init__(self,nrows,ncols):
-        self.bits = np.zeros((nrows,ncols))
+    def __init__(self,shape=None,bitmap=None):
+        if bitmap is not None:
+            self.bitmap = bitmap
+        else:
+            self.bitmap = np.zeros(shape,dtype=np.int8)
 
     def located_shape_valid(self,ls):
-        if ls.rmin()<0 or ls.rmax()>=bits.shape[0]:
+        if ls.rmin()<0 or ls.rmax()>=self.bitmap.shape[0]:
             return False
-        if ls.cmin()<0 or ls.cmax()>=bits.shape[1]:
+        if ls.cmin()<0 or ls.cmax()>=self.bitmap.shape[1]:
             return False
         c=ls.coords()
         rs=c[:,0]
         cs=c[:,1]
-        if bits[rs,cs].any():
+        if self.bitmap[rs,cs].any():
             return False
         return True
 
@@ -124,17 +126,25 @@ class Bitmap(object):
         c=ls.coords()
         rs=c[:,0]
         cs=c[:,1]
-        bits[rs,cs] = 1
+        self.bitmap[rs,cs] = 1
+
+    def copy(self):
+        return Arena(bitmap=self.bitmap.copy())
 
 
 class State(object):
     t=None
-    bitmap=None
+    arena=None
     lshape=None
-    pass
-    # Bitmap of existing blocks
-    # LocatedShape
-    # timestep value t
+
+    def __init__(self, t, arena, lshape):
+        self.t = t
+        self.arena = arena
+        self.lshape = lshape
+
+    def copy(self):
+        b=self.arena.copy()
+        return State(self.t, b, self.lshape)
 
 
 class LocatedShapeGenerator(object):
@@ -151,47 +161,144 @@ class LocatedShapeGenerator(object):
         s = self.random.choice(self.shapes)
         osi = self.random.randrange(s.num_orientations())
         os = s.oshapes[osi]
-        
+
         cmin = 0 - os.cmin()
         cmax = self.arena_dims[1] - 1 - os.cmax()
         r = 0 - os.rmin()
 
         loc = np.array([r, self.random.randrange(cmin,cmax+1)])
-        #TODO
+        return LocatedShape(loc,s,osi)
 
-class Transition(object):
+
+class RewardStructure(object):
+
+    def __init__(self,config):
+        self._move_or_rotate = config["move_or_rotate"]
+        self._invalid_move = config["invalid_move"]
+        self._time_step = config["time_step"]
+        self._rows_cleared = config["rows_cleared"]
+        self._game_over = config["game_over"]
+
+    def move_or_rotate(self):
+        return self._move_or_rotate
+    def invalid_move(self):
+        return self._invalid_move
+    def time_step(self):
+        return self._time_step
+    def rows_cleared(self,n):
+        return self._rows_cleared[n-1]
+    def game_over(self):
+        return self._game_over
+
+
+# os.path.join(os.path.dirname(__file__), "database.dat")
+class Environment(object):
+    shapes=None
     shapegen=None
+    arena_dims=None
     K=None
+    R=None
 
-    def __init__(self,shapegen,K):
-        self.shapegen=shapegen
-        self.K=K
+    def __init__(self,config):
+        with open(config,"r") as fin:
+            config = json.load(fin)["environment"]
+        self.arena_dims = config["arena"]["shape"]
+        self.shapes = [Shape(n,specs) for n,specs in config["shapes"].iteritems()]
+        self.shapegen = LocatedShapeGenerator(self.shapes, self.arena_dims)
+        self.K = config["t_fall"]
+        self.R = RewardStructure(config["rewards"])
 
-    def successors(self, s, a):
-        if s.
+    def initial_state(self):
+        s = State(0, Arena(shape=self.arena_dims), self.shapegen.generate())
+        return s
+        
+    def next_state_and_reward(self, s, a):
+        sprime = s.copy()
+        ls = s.lshape
+        r = 0.0
         if a==Action.Left:
-            pass
+            r += self.R.move_or_rotate()
+            ls = ls.left()
+            if s.arena.located_shape_valid(ls):
+                sprime.lshape = ls
+            else:
+                r += self.R.invalid_move()
+
         elif a==Action.Right:
-            pass
-        elif a==Action.Down:
-            pass
+            r += self.R.move_or_rotate()
+            ls = ls.right()
+            if s.arena.located_shape_valid(ls):
+                sprime.lshape = ls
+            else:
+                r += self.R.invalid_move()
+
         elif a==Action.ClockwiseRotate:
-            pass
+            r += self.R.move_or_rotate()
+            ls = ls.clockwise_rotate()
+            if s.arena.located_shape_valid(ls):
+                sprime.lshape = ls
+            else:
+                r += self.R.invalid_move()
+
+        elif a==Action.Down:
+            while True:
+                ls_next = ls.down()
+                if s.arena.located_shape_valid(ls_next):
+                    ls = ls_next
+                else:
+                    break
+            sprime.lshape = ls
+                
         elif a==Action.NoMove:
             pass
-        pass
-    # function that given state and action, provides list of state/reward/probability tuples
-    # If timestep % K == 0, move down
-    # Attempt to follow action
-    # 
+
+
+        if s.t % self.K == 0:
+            ls_next = s.lshape.down()
+            if s.arena.located_shape_valid(ls_next):
+                sprime.lshape = ls_next
+            else:
+                ls_next = None
+                ls = s.lshape
+                sprime.arena.add_shape(ls)
+                row_indices = np.array(sorted(set(ls.coords()[:,0].tolist())),dtype=np.int8)
+                complete = row_indices[sprime.arena.bitmap[row_indices].all(axis=1)]
+                num_cleared = complete.size
+                if num_cleared>0:
+                    num_rows = sprime.arena.bitmap.shape[0]
+                    num_cols = sprime.arena.bitmap.shape[1]
+                    mask = np.ones((num_rows,)).astype(np.bool_)
+                    mask[complete]=False
+                    new_top = np.zeros((num_cleared,num_cols))
+                    collapsed_bottom = sprime.arena.bitmap[mask]
+                    new_bitmap = np.vstack((new_top,collapsed_bottom))
+                    assert new_bitmap.shape == sprime.arena.bitmap.shape
+                    sprime.arena.bitmap = new_bitmap
+                    r += self.R.rows_cleared(num_cleared)
+                
+                sprime.lshape = self.shapegen.generate()
+                if not sprime.arena.located_shape_valid(sprime.lshape):
+                    sprime.arena.bitmap[:] = 0
+                    sprime.lshape = self.shapegen.generate()
+                    r += self.R.game_over()
+        sprime.t += 1
+        r += self.R.time_step()
+        
+        return (sprime,r)
 
 class TrajectoryEnumerator(object):
+    #TODO
     pass
-    # Given a start state, returns tree
-    # Each node in tree has:
+    # Given a start state, returns DAG
+    # Each node in DAG as:
     #    state
     #    list of children of form: (action, prob, reward, node)
     # how many nodes are there? MAXTIMETOFALL x XSIZE x YSIZE x 4[orientations] ~ 60K
+
+class PlacementAction(object):
+    def __init__(self):
+        pass
+    #TODO 
 
 class Action(object):
     Left,Right,Down,ClockwiseRotate,NoMove = list(range(5))
