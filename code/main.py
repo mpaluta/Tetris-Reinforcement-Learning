@@ -2,7 +2,7 @@
 
 import pygame
 from pygame.locals import *
-from environment import Environment,Action
+from tetrisrl.environment import Environment,Action
 import random
 import sys
 
