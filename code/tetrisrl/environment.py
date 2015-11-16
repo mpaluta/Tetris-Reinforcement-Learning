@@ -286,20 +286,8 @@ class Environment(object):
         
         return (sprime,r)
 
-class TrajectoryEnumerator(object):
-    #TODO
-    pass
-    # Given a start state, returns DAG
-    # Each node in DAG as:
-    #    state
-    #    list of children of form: (action, prob, reward, node)
-    # how many nodes are there? MAXTIMETOFALL x XSIZE x YSIZE x 4[orientations] ~ 60K
 
-class PlacementAction(object):
-    def __init__(self):
-        pass
-    #TODO 
-
+all_actions=list(range(5))
 class Action(object):
-    Left,Right,Down,ClockwiseRotate,NoMove = list(range(5))
+    Left,Right,Down,ClockwiseRotate,NoMove = all_actions
     
