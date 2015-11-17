@@ -16,7 +16,7 @@ class SearchState(object):
         self._is_final = (bp is not None) and (not np.array_equal(bp.ss.s.arena.bitmap, s.arena.bitmap))
 
     def __eq_info__(self):
-        return (tuple(self.s.lshape.coords().tolist()), self.s.t, self._is_final)
+        return (tuple(self.s.lshape.coords().tolist()), self.s.lshape.oindex, self.s.t, self._is_final)
 
     def __hash__(self):
         return hash(self.__eq_info__())
