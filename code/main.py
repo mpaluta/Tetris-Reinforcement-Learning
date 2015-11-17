@@ -3,6 +3,7 @@
 import pygame
 from pygame.locals import *
 from tetrisrl.environment import Environment,Action
+from tetrisrl.baseline import LowestCenterOfGravityAgent
 import random
 import sys
 
@@ -104,7 +105,8 @@ class Engine(object):
 
 e = Environment("../configs/config.json")
 #a = HumanAgent()
-ra = RandomAgent()
-engine = Engine(e,ra)
+#ra = RandomAgent()
+lcoga = LowestCenterOfGravityAgent(e)
+engine = Engine(e,lcoga)
 engine.loop()
 
