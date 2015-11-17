@@ -23,15 +23,8 @@ class LowestCenterOfGravityAgent(object):
             return a
         else:
             bts = self.penum.get_successor_bitmaps(self.e, s)
-            bmin = None
-            tmin = None
-            scoremin=None
-            #print "bts={}".format(bts)
             assert(len(bts)>0)
-            for sprime,actions,r in bts:
-                if scoremin is None or score(sprime.arena.bitmap)<scoremin:
-                    scoremin,bmin,tmin = (score(sprime.arena.bitmap), sprime.arena.bitmap, actions)
-            #print "Tmin={}".format(tmin)
-            self.queued_actions = tmin[1:]
-            return tmin[0]
+            smin,amin,rmin = min(bts, key=lambda x:score(x[0].arena.bitmap))
+            self.queued_actions = amin[1:]
+            return amin[0]
                         

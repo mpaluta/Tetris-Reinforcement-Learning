@@ -78,7 +78,7 @@ class Engine(object):
     def loop(self):
         self.draw()
         while True:
-            time_passed = self.clock.tick(6)
+            time_passed = self.clock.tick(20)
             self.detect_quit()
             (sprime,r) = self.environment.next_state_and_reward(self.s, self.agent.act(self.s))
             self.s = sprime
