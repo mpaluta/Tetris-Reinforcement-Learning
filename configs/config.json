@@ -21,5 +21,28 @@
             "rows_cleared": [1,4,9,16],
             "game_over": -100
 	}
+    },
+    "agent": {
+	"model": {
+	    "features": {
+	    }
+	},
+	"learner": {
+	    "event_aggregator": {
+		"type": "FullPlacementEventAggregator",
+		"params": {
+		}
+	    },
+	    "max_history_len": 30,
+	    "eligibility_trace_lambda": 0.8,
+	    "discount_gamma": 1.0
+	},
+	"actor": {
+	    "type": "FullPlacementActor",
+	    "params": {
+		"epsilon": 0.05
+	    }
+	}
     }
 }
+

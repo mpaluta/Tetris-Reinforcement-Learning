@@ -98,19 +98,35 @@ class Search(object):
         final_tuples = []
         for fs in final_states:
             bt = self.backtrace(fs)
-            final_tuples.append((fs.s,bt,fs.r))
+            final_tuples.append((bt,fs.s))
 
         return final_tuples
             
 
     
+class PlacementAction(object):
+    def __init__(self, minor_actions, final_state):
+        self.minor_actions = minor_actions
+        self.final_state = final_state
+
+    def n(self):
+        return len(self.minor_actions)
+
+    def add_minor_action(self, a):
+        self.minor_actions.append(a)
+
+    def set_final_state(self, s):
+        self.final_state = s
+
 
 class PlacementEnumerator(object):
-    def __init__(self):
-        pass
+    def __init__(self, e):
+        self.e = e
 
-    def get_successor_bitmaps(self, e, s):
-        search = Search()
-        tuples = search.search(e,s)
-        return tuples
+    def _get_actionseq_finalstate_pairs(self, s):
+        return Search().search(self.e, s)
+
+    def get_placement_actions(self, s):
+        tuples = self._get_actionseq_finalstate_pairs(s)
+        return [PlacementAction(action,finalstate) for action,finalstate in tuples]
 

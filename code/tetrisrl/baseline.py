@@ -22,9 +22,11 @@ class LowestCenterOfGravityAgent(object):
             self.queued_actions = self.queued_actions[1:]
             return a
         else:
-            bts = self.penum.get_successor_bitmaps(self.e, s)
-            assert(len(bts)>0)
-            smin,amin,rmin = min(bts, key=lambda x:score(x[0].arena.bitmap))
+            a_s = self.penum.get_actionseq_finalstate_pairs(self.e, s)
+            assert(len(a_s)>0)
+            amin,smin = min(a_s, key=lambda x:score(x[1].arena.bitmap))
             self.queued_actions = amin[1:]
             return amin[0]
                         
+    def observe_sars_tuple(self,sars):
+        pass

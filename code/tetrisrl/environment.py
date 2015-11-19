@@ -200,8 +200,6 @@ class Environment(object):
     R=None
 
     def __init__(self,config):
-        with open(config,"r") as fin:
-            config = json.load(fin)["environment"]
         self.arena_dims = config["arena"]["shape"]
         self.shapes = [Shape(n,specs) for n,specs in config["shapes"].iteritems()]
         self.shapegen = LocatedShapeGenerator(self.shapes, self.arena_dims)

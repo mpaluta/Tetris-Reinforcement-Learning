@@ -4,6 +4,9 @@ import pygame
 from pygame.locals import *
 from tetrisrl.environment import Environment,Action
 from tetrisrl.baseline import LowestCenterOfGravityAgent
+from tetrisrl.agents import HumanAgent, RandomAgent
+from tetrisrl.rl import QLearningAgent
+import json
 import random
 import sys
 
@@ -17,40 +20,6 @@ class Colors(object):
     RED=(255,0,0)
     BLUE=(0,0,255)
     BLACK=(0,0,0)
-
-class Agent(object):
-    pass
-
-class HumanAgent(Agent):
-    def __init__(self):
-        pass
-
-    def act(self,s):
-        action = Action.NoMove
-        for event in pygame.event.get():
-            if event.type == KEYDOWN or event.type==KEYUP:
-                if event.key == K_UP:
-                    action=Action.ClockwiseRotate
-                elif event.key == K_DOWN:
-                    action=Action.Down
-                elif event.key == K_LEFT:
-                    action=Action.Left
-                elif event.key == K_RIGHT:
-                    action=Action.Right
-                elif event.key == K_q:
-                    pygame.quit()
-                    sys.exit()
-            elif event.type == KEYUP:
-                pass
-        return action
-
-
-class RandomAgent(object):
-    actions=None
-    def __init__(self):
-        self.actions = [Action.NoMove, Action.Down, Action.Left, Action.Right, Action.ClockwiseRotate]
-    def act(self,s):
-        return random.choice(self.actions)
 
 class Engine(object):
     environment=None
@@ -80,7 +49,9 @@ class Engine(object):
         while True:
             time_passed = self.clock.tick(20)
             self.detect_quit()
-            (sprime,r) = self.environment.next_state_and_reward(self.s, self.agent.act(self.s))
+            a = self.agent.act(self.s)
+            (sprime,r) = self.environment.next_state_and_reward(self.s, a)
+            self.agent.observe_sars_tuple(self.s,a,r,sprime)
             self.s = sprime
             self.draw()
             
@@ -103,10 +74,16 @@ class Engine(object):
 
         pygame.display.update()
 
-e = Environment("../configs/config.json")
+
+config_file = "../configs/config.json"
+with open(config_file,"r") as fin:
+    config = json.load(fin)
+
+e = Environment(config["environment"])
 #a = HumanAgent()
 #ra = RandomAgent()
-lcoga = LowestCenterOfGravityAgent(e)
-engine = Engine(e,lcoga)
+#lcoga = LowestCenterOfGravityAgent(e)
+qla = QLearningAgent(e,config["agent"])
+engine = Engine(e,qla)
 engine.loop()
 
