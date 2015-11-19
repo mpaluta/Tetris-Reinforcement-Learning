@@ -26,6 +26,9 @@ class QModel(object):
     def q(self, s, a):
         return self.weights.dot(self.features.f(s,a))
 
+    def beta(self, s, a):
+        return self.features.f(s,a)
+
     def update_weights(self, delta):
         self.weights += delta
 
@@ -98,6 +101,7 @@ class QLearner(object):
     def __init__(self, QM, config):
        self.QM = QM
        self.items = collections.deque([], config["max_history_len"])
+       self.alpha = config["learning_rate"]
        self._lambda = config["eligibility_trace_lambda"]
        self.gamma = config["discount_gamma"]
        self.event_aggregator = json_descr_to_class(config["event_aggregator"])
@@ -115,7 +119,30 @@ class QLearner(object):
             self.learn()
             
     def learn(self):
-        pass
+        # SARSA with approximation and eligibility trace
+        # TODO: this code does not include discounting
+        if len(self.items)>1:
+            curr = self.items[-2]
+            _next = self.items[-1]
+
+            s = curr[0][0]
+            a = curr[0][1]
+            r = curr[0][2]
+            sprime = _next[0][0]
+            aprime = _next[0][1]
+            
+            q = self.QM.q(s,a)
+            qprime = self.QM.q(sprime,aprime)
+
+            delta = r + qprime - q
+    
+            for i in range(len(self.items)-1):
+                s = self.items[i][0][0]
+                a = self.items[i][0][1]
+                n = self.items[i][1]
+                beta = self.QM.beta(s,a)
+                self.QM.update_weights(self.alpha * beta * n)
+                print "Weights: {}".format(self.QM.weights)
 
 
 class QLearningAgent(object):

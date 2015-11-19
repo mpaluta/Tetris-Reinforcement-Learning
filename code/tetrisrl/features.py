@@ -48,13 +48,13 @@ class FeatureFunctionVector(object):
         self.functions = []
         for feat_name, feat_args in config.iteritems():
             try:
-                self.functions.add(str_to_class(feat_name)(*feat_args))
+                self.functions.add(str_to_class(feat_name)(**feat_args))
             except AttributeError:
                 raise Exception("Cannot find feature with name '{}'".format(feat_name))
 
     def f(self, s, a):
         fvecs = [f.f(s,a) for f in self.functions]
-        return np.array(itertools.chain(*fvecs))
+        return np.array(list(itertools.chain(*fvecs)))
 
     def length(self):
         return sum(f.length() for f in self.functions)

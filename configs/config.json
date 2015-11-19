@@ -25,6 +25,7 @@
     "agent": {
 	"model": {
 	    "features": {
+		"MaxHeightFeature": { }
 	    }
 	},
 	"learner": {
@@ -35,7 +36,8 @@
 	    },
 	    "max_history_len": 30,
 	    "eligibility_trace_lambda": 0.8,
-	    "discount_gamma": 1.0
+	    "discount_gamma": 1.0,
+	    "learning_rate": 0.1
 	},
 	"actor": {
 	    "type": "FullPlacementActor",

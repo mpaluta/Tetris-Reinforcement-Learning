@@ -118,6 +118,9 @@ class PlacementAction(object):
     def set_final_state(self, s):
         self.final_state = s
 
+    def get_final_bitmap(self):
+        return self.final_state.arena.bitmap
+
 
 class PlacementEnumerator(object):
     def __init__(self, e):
