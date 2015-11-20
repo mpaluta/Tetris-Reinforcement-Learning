@@ -15,9 +15,9 @@
 	    "T": ["0000,0111,0010,0000", "0010,0011,0010,0000", "0010,0111,0000,0000", "0010,0110,0010,0000"]
 	},
 	"rewards": {
-            "move_or_rotate": -0.1,
-            "invalid_move": -1,
-            "time_step": -0.1,
+            "move_or_rotate": 0.0,
+            "invalid_move": 0.0,
+            "time_step": 0.0,
             "rows_cleared": [1,4,9,16],
             "game_over": -100
 	}
@@ -37,7 +37,8 @@
 	    "max_history_len": 30,
 	    "eligibility_trace_lambda": 0.8,
 	    "discount_gamma": 1.0,
-	    "learning_rate": 0.1
+	    "learning_rate": 0.01,
+	    "learning_rate_decay": 0.999
 	},
 	"actor": {
 	    "type": "FullPlacementActor",

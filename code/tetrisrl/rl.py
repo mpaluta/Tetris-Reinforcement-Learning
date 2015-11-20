@@ -8,6 +8,7 @@ import random
 
 
 def str_to_class(_str):
+    print("Hello there: {}".format(_str))
     return getattr(sys.modules[__name__], _str)
 
 def json_descr_to_class(obj, **kwargs):
@@ -21,7 +22,8 @@ class QModel(object):
     def __init__(self, config):
         self.features = FeatureFunctionVector(config["features"])
         n = self.features.length()
-        self.weights = (np.random.random((n,)) * 2.0)-1.0
+        #self.weights = (np.random.random((n,)) * 2.0)-1.0
+        self.weights = np.zeros((n,))
 
     def q(self, s, a):
         return self.weights.dot(self.features.f(s,a))
@@ -102,6 +104,7 @@ class QLearner(object):
        self.QM = QM
        self.items = collections.deque([], config["max_history_len"])
        self.alpha = config["learning_rate"]
+       self.alpha_decay = config["learning_rate_decay"]
        self._lambda = config["eligibility_trace_lambda"]
        self.gamma = config["discount_gamma"]
        self.event_aggregator = json_descr_to_class(config["event_aggregator"])
@@ -117,6 +120,11 @@ class QLearner(object):
             self.add_history_item(self.event_aggregator.next_event())
             print("Event: {}".format(self.items[-1]))
             self.learn()
+            self.reduce_learning_rate()
+        
+    def reduce_learning_rate(self):
+        self.alpha *= self.alpha_decay
+        print "Learning rate: {:.3f}".format(self.alpha)
             
     def learn(self):
         # SARSA with approximation and eligibility trace
@@ -141,8 +149,8 @@ class QLearner(object):
                 a = self.items[i][0][1]
                 n = self.items[i][1]
                 beta = self.QM.beta(s,a)
-                self.QM.update_weights(self.alpha * beta * n)
-                print "Weights: {}".format(self.QM.weights)
+                self.QM.update_weights(self.alpha * beta * delta * n)
+                print "Weights: {} Delta: {}".format(self.QM.weights, delta)
 
 
 class QLearningAgent(object):

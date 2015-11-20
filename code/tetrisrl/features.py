@@ -4,8 +4,8 @@ import itertools
 import environment
 
 
-def str_to_class(str):
-    return getattr(sys.modules[__name__], str)
+def _str_to_class(_str):
+    return getattr(sys.modules[__name__], _str)
 
 
 class Feature(object):
@@ -34,9 +34,9 @@ class MaxHeightFeature(Feature):
     def __init__(self):
         pass
     def f(self,s,a):
-        bitmap = s.arena.bitmap
+        bitmap = a.get_final_bitmap()
         H = bitmap.shape[1]
-        minrow = bitmap.nonzero()[0].min()
+        minrow = H if bitmap.sum()==0 else bitmap.nonzero()[0].min()
         maxheight = H - minrow
         return [maxheight]
 
@@ -48,7 +48,8 @@ class FeatureFunctionVector(object):
         self.functions = []
         for feat_name, feat_args in config.iteritems():
             try:
-                self.functions.add(str_to_class(feat_name)(**feat_args))
+                cls = _str_to_class(feat_name)
+                self.functions.append(cls(**feat_args))
             except AttributeError:
                 raise Exception("Cannot find feature with name '{}'".format(feat_name))
 
