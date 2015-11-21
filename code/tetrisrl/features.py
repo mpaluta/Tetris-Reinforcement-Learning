@@ -44,7 +44,7 @@ class ShortestRowCompletionLengthFeature(Feature):
         pass
 
     def f(self,s,a):
-        bitmap = a.get_final_bitmap()
+        bitmap = a.get_prefinal_bitmap()
         W = bitmap.shape[1]
         ws = bitmap.sum(axis=1)
         maxw = ws.max()
@@ -84,6 +84,27 @@ class MaxHeightFeature(Feature):
         minrow = H if bitmap.sum()==0 else bitmap.nonzero()[0].min()
         maxheight = H - minrow
         return [maxheight]
+
+    def length(self):
+        return 1
+
+class TrappedSquaresFeature(Feature):
+    def __init__(self):
+        pass
+
+    def f(self,s,a):
+        bitmap = a.get_final_bitmap()
+        H = bitmap.shape[0]
+        W = bitmap.shape[1]
+        badcount=0
+        for c in range(W):
+            count = 0
+            for r in range(H-1,-1,-1):
+                if bitmap[r,c]==0:
+                    count += 1
+                else:
+                    badcount += count
+        return [badcount]
 
     def length(self):
         return 1

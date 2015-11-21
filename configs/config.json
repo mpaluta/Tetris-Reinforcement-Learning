@@ -18,7 +18,7 @@
             "move_or_rotate": 0.0,
             "invalid_move": 0.0,
             "time_step": 0.0,
-            "rows_cleared": [100,400,900,1600],
+            "rows_cleared": [1,1,1,1],
             "game_over": -100
 	}
     },
@@ -26,10 +26,9 @@
 	"model": {
 	    "features": {
 		"ColTransitionsFeature": { },
-		"MaxHeightChangeFeature": { },
 		"MaxHeightFeature": { },
 		"MaxHeightSquaredFeature": { },
-		"ShortestRowCompletionLengthFeature": { }
+		"TrappedSquaresFeature": { }
 	    }
 	},
 	"learner": {
@@ -41,7 +40,7 @@
 	    "max_history_len": 30,
 	    "eligibility_trace_lambda": 0.1,
 	    "discount_gamma": 0.5,
-	    "learning_rate": 0.0001,
+	    "learning_rate": 0.0003,
 	    "learning_rate_decay": 0.999
 	},
 	"actor": {

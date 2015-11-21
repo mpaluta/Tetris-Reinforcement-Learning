@@ -9,11 +9,12 @@ class Backpointer(object):
         self.ss = ss
 
 class SearchState(object):
-    def __init__(self, t, s, r, bp):
+    def __init__(self, t, s, r, bp, pfbm):
         self.t = t
         self.s = s
         self.r = r
         self.bp = bp
+        self.pfbm = pfbm
         self._is_final = (bp is not None) and (not np.array_equal(bp.ss.s.arena.bitmap, s.arena.bitmap))
 
     def __eq_info__(self):
@@ -38,8 +39,8 @@ class Transition(object):
             return []
         results = []
         for a in environment.all_actions:
-            sprime, r = self.e.next_state_and_reward(ss.s,a)
-            results.append(SearchState(ss.t+1, sprime, r+ss.r, Backpointer(a, ss)))
+            sprime, r, pfbm = self.e.next_state_and_reward(ss.s,a)
+            results.append(SearchState(ss.t+1, sprime, r+ss.r, Backpointer(a, ss), pfbm))
         #print "successors_results = {}".format(results)
         return results
 
@@ -89,7 +90,7 @@ class Search(object):
         beams = []
         trans = Transition(e)
         beams.append(Beam(trans))
-        beams[0].populate_with_states([SearchState(0, s, 0, None)])
+        beams[0].populate_with_states([SearchState(0, s, 0, None, None)])
         final_states = []
         for i in range(1,1000):
             if beams[i-1].size()==0:
@@ -116,16 +117,17 @@ class Search(object):
 
         for fs in filtered_states:
             bt = self.backtrace(fs)
-            final_tuples.append((bt,fs.s))
+            final_tuples.append((bt,fs.s,fs.pfbm))
 
         return final_tuples
             
 
     
 class PlacementAction(object):
-    def __init__(self, minor_actions, final_state):
+    def __init__(self, minor_actions, final_state, pfbm):
         self.minor_actions = minor_actions
         self.final_state = final_state
+        self.pfbm = pfbm
 
     def n(self):
         return len(self.minor_actions)
@@ -135,6 +137,12 @@ class PlacementAction(object):
 
     def set_final_state(self, s):
         self.final_state = s
+
+    def set_prefinal_bitmap(self, pfbm):
+        self.pfbm = pfbm
+
+    def get_prefinal_bitmap(self):
+        return self.pfbm
 
     def get_final_bitmap(self):
         return self.final_state.arena.bitmap
@@ -149,5 +157,5 @@ class PlacementEnumerator(object):
 
     def get_placement_actions(self, s):
         tuples = self._get_actionseq_finalstate_pairs(s)
-        return [PlacementAction(action,finalstate) for action,finalstate in tuples]
+        return [PlacementAction(action,finalstate,pfbm) for action,finalstate,pfbm in tuples]
 

@@ -81,10 +81,10 @@ class FullPlacementEventAggregator(object):
         self.partial_tuple = [None, None, None, None]
         self.ready_items = collections.deque()
 
-    def observe_sars_tuple(self,s,a,r,sprime):
+    def observe_sars_tuple(self,s,a,r,sprime, pfbm=None):
         if self.partial_tuple[0] is None:
             self.partial_tuple[0] = s
-            self.partial_tuple[1] = PlacementAction([],None)
+            self.partial_tuple[1] = PlacementAction([],None,None)
             self.partial_tuple[1].add_minor_action(a)
             self.partial_tuple[2] = 0.0
         else:
@@ -92,6 +92,7 @@ class FullPlacementEventAggregator(object):
             self.partial_tuple[2] += r
             if not np.array_equal(s.arena.bitmap, sprime.arena.bitmap):
                 self.partial_tuple[1].set_final_state(sprime)
+                self.partial_tuple[1].set_prefinal_bitmap(pfbm)
                 self.partial_tuple[3] = sprime
                 self.ready_items.append(tuple(self.partial_tuple))
                 self.partial_tuple = [None,None,None,None]
@@ -119,8 +120,8 @@ class QLearner(object):
             i[1] *= self._lambda * self.gamma
         self.items.append([event,1.0/(self._lambda * self.gamma)]) # Quirky: we start learning from the second to last example
 
-    def observe_sars_tuple(self, s, a, r, sprime):
-        self.event_aggregator.observe_sars_tuple(s,a,r,sprime)
+    def observe_sars_tuple(self, s, a, r, sprime, pfbm=None):
+        self.event_aggregator.observe_sars_tuple(s,a,r,sprime, pfbm=pfbm)
         while self.event_aggregator.events_ready():
             self.add_history_item(self.event_aggregator.next_event())
             #print("Event: {}".format(self.items[-1]))
@@ -168,8 +169,8 @@ class QLearningAgent(object):
     def act(self,s):
         return self.QA.act(s)
 
-    def observe_sars_tuple(self,s,a,r,sprime):
-        self.QL.observe_sars_tuple(s,a,r,sprime)
+    def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
+        self.QL.observe_sars_tuple(s,a,r,sprime,pfbm=pfbm)
 
     def print_state(self):
         self.QM.print_state()

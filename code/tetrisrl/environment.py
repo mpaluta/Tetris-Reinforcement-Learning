@@ -250,6 +250,7 @@ class Environment(object):
         elif a==Action.NoMove:
             pass
 
+        prefinal_bitmap=None
 
         if s.t % self.K == 0:
             ls_next = s.lshape.down()
@@ -263,6 +264,7 @@ class Environment(object):
                 complete = row_indices[sprime.arena.bitmap[row_indices].all(axis=1)]
                 num_cleared = complete.size
                 #print "state={}  prior_bitmap={}  lshape_coords={}  next_bitmap={}  row_indices={}  num_cleared={}".format(sprime, s.arena.bitmap[-1], ls.coords(), sprime.arena.bitmap[-1],row_indices, num_cleared)
+                prefinal_bitmap = sprime.arena.bitmap.copy()
                 if num_cleared>0:
                     num_rows = sprime.arena.bitmap.shape[0]
                     num_cols = sprime.arena.bitmap.shape[1]
@@ -283,7 +285,7 @@ class Environment(object):
         sprime.t += 1
         r += self.R.time_step()
         
-        return (sprime,r)
+        return (sprime,r,prefinal_bitmap)
 
 
 all_actions=list(range(5))

@@ -53,12 +53,12 @@ class Engine(object):
             time_passed = self.clock.tick(50)
             self.detect_quit()
             a = self.agent.act(self.s)
-            (sprime,r) = self.environment.next_state_and_reward(self.s, a)
+            sprime,r,pfbm = self.environment.next_state_and_reward(self.s, a)
             if r > 0:
                 self.total_pos_r += r
             else:
                 self.total_neg_r += r
-            self.agent.observe_sars_tuple(self.s,a,r,sprime)
+            self.agent.observe_sars_tuple(self.s,a,r,sprime,pfbm=pfbm)
             self.s = sprime
             self.draw()
             
