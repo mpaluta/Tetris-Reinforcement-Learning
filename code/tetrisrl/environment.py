@@ -262,6 +262,7 @@ class Environment(object):
                 row_indices = np.array(sorted(set(ls.coords()[:,0].tolist())),dtype=np.int8)
                 complete = row_indices[sprime.arena.bitmap[row_indices].all(axis=1)]
                 num_cleared = complete.size
+                #print "state={}  prior_bitmap={}  lshape_coords={}  next_bitmap={}  row_indices={}  num_cleared={}".format(sprime, s.arena.bitmap[-1], ls.coords(), sprime.arena.bitmap[-1],row_indices, num_cleared)
                 if num_cleared>0:
                     num_rows = sprime.arena.bitmap.shape[0]
                     num_cols = sprime.arena.bitmap.shape[1]

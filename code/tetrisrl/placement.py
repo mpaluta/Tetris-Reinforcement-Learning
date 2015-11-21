@@ -9,14 +9,15 @@ class Backpointer(object):
         self.ss = ss
 
 class SearchState(object):
-    def __init__(self, s, r, bp):
+    def __init__(self, t, s, r, bp):
+        self.t = t
         self.s = s
         self.r = r
         self.bp = bp
         self._is_final = (bp is not None) and (not np.array_equal(bp.ss.s.arena.bitmap, s.arena.bitmap))
 
     def __eq_info__(self):
-        return (tuple(self.s.lshape.coords().tolist()), self.s.lshape.oindex, self.s.t, self._is_final)
+        return (tuple(self.s.lshape.coords().tolist()), tuple(self.s.arena.bitmap.tolist()), self.s.lshape.oindex, self.s.t, self._is_final)
 
     def __hash__(self):
         return hash(self.__eq_info__())
@@ -38,7 +39,7 @@ class Transition(object):
         results = []
         for a in environment.all_actions:
             sprime, r = self.e.next_state_and_reward(ss.s,a)
-            results.append(SearchState(sprime,r+ss.r, Backpointer(a, ss)))
+            results.append(SearchState(ss.t+1, sprime, r+ss.r, Backpointer(a, ss)))
         #print "successors_results = {}".format(results)
         return results
 
@@ -61,10 +62,14 @@ class Beam(object):
         intermediate_states = list(sorted(intermediate_states, cmp=lambda x,y:(cmp(x.__eq_info__(),y.__eq_info__()))))
         self.states = []
 
-        for k,g in itertools.groupby(intermediate_states, lambda x:x.__eq_info__()):
+        for k,g in itertools.groupby(intermediate_states, key=lambda x:x.__eq_info__()):
+            #print "EqInfo: {}".format(k)
             lst = list(g)
             ssmax=max(lst, key=lambda x:x.r)
             self.states.append(ssmax)
+
+        #TODO REMOVE THIS
+        #self.states = intermediate_states
         #print "States={}".format(self.states)
 
 class Search(object):
@@ -84,7 +89,7 @@ class Search(object):
         beams = []
         trans = Transition(e)
         beams.append(Beam(trans))
-        beams[0].populate_with_states([SearchState(s,0,None)])
+        beams[0].populate_with_states([SearchState(0, s, 0, None)])
         final_states = []
         for i in range(1,1000):
             if beams[i-1].size()==0:
@@ -95,8 +100,21 @@ class Search(object):
                 beams[-1].populate(beams[-2])
                 final_states.extend([ss for ss in beams[-1].states if ss.is_final()])
 
+        #for i,b in enumerate(beams):
+        #    print "Beam #{}".format(i)
+        #    print "----------------------------"
+        #    for j,ss in enumerate(b.states):
+        #        print "{})  state={}  t={}  coords={}  bmp={}   isfinal={}".format(j, ss.s, ss.t, ss.s.lshape.coords(), ss.s.arena.bitmap[-1], ss.is_final())
+
         final_tuples = []
-        for fs in final_states:
+        # Sort and group final states by having the same bitmap
+        keyfunc=lambda x:tuple(x.s.arena.bitmap.flatten().tolist())
+        final_states = sorted(final_states, key=keyfunc)
+        filtered_states = []
+        for k,g in itertools.groupby(final_states, key=keyfunc):
+            filtered_states.append(min(list(g), key=lambda x:x.t))
+
+        for fs in filtered_states:
             bt = self.backtrace(fs)
             final_tuples.append((bt,fs.s))
 

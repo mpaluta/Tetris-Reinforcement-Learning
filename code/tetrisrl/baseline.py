@@ -8,9 +8,8 @@ class LowestCenterOfGravityAgent(object):
     queued_actions=None
     e=None
     def __init__(self,e):
-        self.penum=PlacementEnumerator()
+        self.penum=PlacementEnumerator(e)
         self.queued_actions=[]
-        self.e = e
 
     def act(self,s):
         def score(b):
@@ -22,11 +21,11 @@ class LowestCenterOfGravityAgent(object):
             self.queued_actions = self.queued_actions[1:]
             return a
         else:
-            a_s = self.penum.get_actionseq_finalstate_pairs(self.e, s)
+            a_s = self.penum._get_actionseq_finalstate_pairs(s)
             assert(len(a_s)>0)
             amin,smin = min(a_s, key=lambda x:score(x[1].arena.bitmap))
             self.queued_actions = amin[1:]
             return amin[0]
                         
-    def observe_sars_tuple(self,sars):
+    def observe_sars_tuple(self,s,a,r,sprime):
         pass

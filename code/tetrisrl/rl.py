@@ -8,7 +8,6 @@ import random
 
 
 def str_to_class(_str):
-    print("Hello there: {}".format(_str))
     return getattr(sys.modules[__name__], _str)
 
 def json_descr_to_class(obj, **kwargs):
@@ -66,6 +65,12 @@ class FullPlacementActor(object):
             if random.random()<self.eps:
                 p = random.choice(choices)
             else:
+                all_actions = map(lambda x: x.minor_actions,choices)
+                all_bitmaps = map(lambda x: x.final_state.arena.bitmap[-1].flatten(),choices)
+                initial_bitmaps = [s.arena.bitmap[-1].flatten() for i in all_bitmaps]
+                #print "{} choices. Bitmaps/Bitmaps/Betas: {}".format(len(choices), list(zip(initial_bitmaps,all_bitmaps,map(lambda x: self.QM.beta(s,x), choices))))
+                #raise Exception("TODO")
+
                 p = max(choices, key=lambda x: self.QM.q(s,x))
             self.placement = PartiallyCompletedPlacement(p)
         return self.placement.incr_action()
@@ -111,14 +116,14 @@ class QLearner(object):
 
     def add_history_item(self, event):
         for i in self.items:
-            i[1] *= self._lambda
-        self.items.append([event,1.0])
+            i[1] *= self._lambda * self.gamma
+        self.items.append([event,1.0/(self._lambda * self.gamma)]) # Quirky: we start learning from the second to last example
 
     def observe_sars_tuple(self, s, a, r, sprime):
         self.event_aggregator.observe_sars_tuple(s,a,r,sprime)
         while self.event_aggregator.events_ready():
             self.add_history_item(self.event_aggregator.next_event())
-            print("Event: {}".format(self.items[-1]))
+            #print("Event: {}".format(self.items[-1]))
             self.learn()
             self.reduce_learning_rate()
         
@@ -142,7 +147,7 @@ class QLearner(object):
             q = self.QM.q(s,a)
             qprime = self.QM.q(sprime,aprime)
 
-            delta = r + qprime - q
+            delta = r + self.gamma * qprime - q
     
             for i in range(len(self.items)-1):
                 s = self.items[i][0][0]
@@ -150,7 +155,8 @@ class QLearner(object):
                 n = self.items[i][1]
                 beta = self.QM.beta(s,a)
                 self.QM.update_weights(self.alpha * beta * delta * n)
-                print "Weights: {} Delta: {}".format(self.QM.weights, delta)
+                print " ".join(self.QM.features.names)
+                print "Weights: {}  Beta: {}  Delta: {}".format(self.QM.weights, beta, delta)
 
 
 class QLearningAgent(object):
@@ -167,6 +173,7 @@ class QLearningAgent(object):
 
     def print_state(self):
         self.QM.print_state()
+
 
     
         

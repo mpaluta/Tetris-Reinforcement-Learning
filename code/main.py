@@ -32,8 +32,11 @@ class Engine(object):
     def __init__(self, environment,agent):
         self.environment=environment
         self.s = self.environment.initial_state()
+        self.total_pos_r = 0.0
+        self.total_neg_r = 0.0
         self.agent=agent
         pygame.init()
+        self.font = pygame.font.SysFont(None, 28)    
         self.screen=pygame.display.set_mode(Globals.SCREEN_DIMS,0,32)
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Tetris")
@@ -47,10 +50,14 @@ class Engine(object):
     def loop(self):
         self.draw()
         while True:
-            time_passed = self.clock.tick(20)
+            time_passed = self.clock.tick(50)
             self.detect_quit()
             a = self.agent.act(self.s)
             (sprime,r) = self.environment.next_state_and_reward(self.s, a)
+            if r > 0:
+                self.total_pos_r += r
+            else:
+                self.total_neg_r += r
             self.agent.observe_sars_tuple(self.s,a,r,sprime)
             self.s = sprime
             self.draw()
@@ -60,6 +67,13 @@ class Engine(object):
         b = self.s.arena.bitmap
         ls = self.s.lshape
         w = 20
+
+        text = self.font.render("Total Reward: {:.2f}  {:.2f}".format(self.total_pos_r, self.total_neg_r), True, Colors.WHITE, Colors.BLUE)
+        textRect = text.get_rect()
+        textRect.centerx = (w * b.shape[1]) + 250
+        textRect.centery = self.screen.get_rect().centery
+        self.screen.blit(text, textRect)
+
         for r in range(b.shape[0]):
             for c in range(b.shape[1]):
                 rect = (w+(w*c),w+(w*r),w,w)
