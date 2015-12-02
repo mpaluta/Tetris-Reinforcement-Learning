@@ -67,7 +67,7 @@
     "engine": {
 	"fps": 10000,
 	"show": true,
-	"max_time": 1500
+	"max_time": 60000
     }
 }
 

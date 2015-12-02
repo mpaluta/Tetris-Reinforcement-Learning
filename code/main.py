@@ -11,6 +11,7 @@ import random
 import sys
 import logging
 import os
+import shutil
 
 
 class Globals(object):
@@ -118,8 +119,12 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 log_file = "{}/log".format(output_dir)
-
 logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG)
+
+saved_config_file = "{}/config".format(output_dir)
+shutil.copyfile(config_file, saved_config_file)
+
+
 
 with open(config_file,"r") as fin:
     config = json.load(fin)
