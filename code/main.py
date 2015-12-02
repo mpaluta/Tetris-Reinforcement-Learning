@@ -101,20 +101,29 @@ class Engine(object):
         pygame.display.update()
 
 
-logging.basicConfig(filename='output.log', filemode="w", level=logging.DEBUG)
 
-config_file = "../configs/config.json"
+
+config_file = sys.argv[1]
+log_file = sys.argv[2]
+
+logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG)
+
 with open(config_file,"r") as fin:
     config = json.load(fin)
 
 e = Environment(config["environment"])
-#a = HumanAgent()
-#ra = RandomAgent()
 
-if config["agent"]["type"] == "rl":
+agent_type = config["agent"]["type"]
+
+if agent_type == "rl":
     agent = QLearningAgent(e,config["agent"])
-elif config["agent"]["type"] == "lcog":
+elif agent_type == "lcog":
     agent = LowestCenterOfGravityAgent(e)
+elif agent_type == "human":
+    agent = HumanAgent()
+    assert config["engine"]["show"]
+elif agent_type == "random":
+    agent = RandomAgent()
 else:
     raise Exception("Unknown agent type: {}".format(config["agent"]["type"]))
 
