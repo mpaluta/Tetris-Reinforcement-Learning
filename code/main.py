@@ -30,6 +30,7 @@ class Engine(object):
     clock=None
     s=None
     agent=None
+    max_time=None
     
     def __init__(self, environment,agent,config):
         self.environment=environment
@@ -39,6 +40,7 @@ class Engine(object):
         self.agent=agent
         self.fps = config["fps"]
         self.show = config["show"]
+        self.max_time = config["max_time"]
 
         if self.show:
             pygame.init()
@@ -56,9 +58,14 @@ class Engine(object):
 
     def loop(self):
         self.draw()
+        t = 0
         while True:
+            t += 1
+            if t > self.max_time:
+                break
+
             if self.show:
-                time_passed = self.clock.tick(self.fps)
+                self.clock.tick(self.fps)
             self.detect_quit()
             a = self.agent.act(self.s)
             sprime,r,pfbm = self.environment.next_state_and_reward(self.s, a)
