@@ -10,6 +10,7 @@ import json
 import random
 import sys
 import logging
+import os
 
 
 class Globals(object):
@@ -111,7 +112,12 @@ class Engine(object):
 
 
 config_file = sys.argv[1]
-log_file = sys.argv[2]
+output_dir = sys.argv[2]
+
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+log_file = "{}/log".format(output_dir)
 
 logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG)
 

@@ -30,40 +30,42 @@ def read_file(fn):
                 r.append(float(tokens[-1]))
     return (r,d,absd)
 
-def save_results(fn,outprefix):
+def save_results(dirname):
     r_win = 25000
     d_win = 500
     absd_win = 500
 
-    r,d,absd = read_file(sys.argv[1])
+    r,d,absd = read_file("{}/log".format(dirname))
     winrx,winry = windowed_average(r, r_win)
     windx,windy = windowed_average(d, d_win)
     winabsdx,winabsdy = windowed_average(absd, absd_win)
-    
+   
+    outprefix = "{}/plots".format(dirname)
+ 
     plt.plot(windx,windy)
     plt.ylabel("Delta")
-    plt.xlabel("Timestep") 
+    plt.xlabel("Timestep (block placements)") 
     plt.title("Trailing average of {} latest delta values".format(d_win))
     plt.savefig("{}.delta.png".format(outprefix))
     plt.clf()
 
     plt.plot(winabsdx,winabsdy)
     plt.ylabel("Delta magnitude")
-    plt.xlabel("Timestep") 
+    plt.xlabel("Timestep (block placements)") 
     plt.title("Trailing average of {} latest delta magnitudes".format(absd_win))
     plt.savefig("{}.abs_delta.png".format(outprefix))
     plt.clf()
 
     plt.plot(winrx,winry)
     plt.ylabel("Reward")
-    plt.xlabel("Timestep")
+    plt.xlabel("Timestep (game ticks)")
     plt.title("Trailing average of {} latest reward values".format(r_win))
     plt.savefig("{}.reward.png".format(outprefix))
     plt.clf()
 
 
 def main():
-    save_results(sys.argv[1], sys.argv[2])
+    save_results(sys.argv[1])
 
 
 
