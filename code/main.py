@@ -9,6 +9,8 @@ from tetrisrl.rl import QLearningAgent
 import json
 import random
 import sys
+import logging
+
 
 class Globals(object):
     SCREEN_DIMS=(640,480)
@@ -29,28 +31,34 @@ class Engine(object):
     s=None
     agent=None
     
-    def __init__(self, environment,agent):
+    def __init__(self, environment,agent,config):
         self.environment=environment
         self.s = self.environment.initial_state()
         self.total_pos_r = 0.0
         self.total_neg_r = 0.0
         self.agent=agent
-        pygame.init()
-        self.font = pygame.font.SysFont(None, 28)    
-        self.screen=pygame.display.set_mode(Globals.SCREEN_DIMS,0,32)
-        self.clock = pygame.time.Clock()
-        pygame.display.set_caption("Tetris")
-        self.draw()
+        self.fps = config["fps"]
+        self.show = config["show"]
+
+        if self.show:
+            pygame.init()
+            self.font = pygame.font.SysFont(None, 28)    
+            self.screen=pygame.display.set_mode(Globals.SCREEN_DIMS,0,32)
+            self.clock = pygame.time.Clock()
+            pygame.display.set_caption("Tetris")
+            self.draw()
 
     def detect_quit(self):
-        if pygame.event.peek(QUIT):
-            pygame.quit()
-            sys.exit()
+        if self.show:
+            if pygame.event.peek(QUIT):
+                pygame.quit()
+                sys.exit()
 
     def loop(self):
         self.draw()
         while True:
-            time_passed = self.clock.tick(50)
+            if self.show:
+                time_passed = self.clock.tick(self.fps)
             self.detect_quit()
             a = self.agent.act(self.s)
             sprime,r,pfbm = self.environment.next_state_and_reward(self.s, a)
@@ -61,8 +69,12 @@ class Engine(object):
             self.agent.observe_sars_tuple(self.s,a,r,sprime,pfbm=pfbm)
             self.s = sprime
             self.draw()
+            print "Total Reward: {:.2f}  {:.2f}".format(self.total_pos_r, self.total_neg_r)
             
     def draw(self):
+        if not self.show:
+            return
+
         self.screen.fill(Colors.BLACK)
         b = self.s.arena.bitmap
         ls = self.s.lshape
@@ -89,6 +101,8 @@ class Engine(object):
         pygame.display.update()
 
 
+logging.basicConfig(filename='output.log', filemode="w", level=logging.DEBUG)
+
 config_file = "../configs/config.json"
 with open(config_file,"r") as fin:
     config = json.load(fin)
@@ -96,8 +110,14 @@ with open(config_file,"r") as fin:
 e = Environment(config["environment"])
 #a = HumanAgent()
 #ra = RandomAgent()
-#lcoga = LowestCenterOfGravityAgent(e)
-qla = QLearningAgent(e,config["agent"])
-engine = Engine(e,qla)
+
+if config["agent"]["type"] == "rl":
+    agent = QLearningAgent(e,config["agent"])
+elif config["agent"]["type"] == "lcog":
+    agent = LowestCenterOfGravityAgent(e)
+else:
+    raise Exception("Unknown agent type: {}".format(config["agent"]["type"]))
+
+engine = Engine(e,agent,config["engine"])
 engine.loop()
 

@@ -88,6 +88,150 @@ class MaxHeightFeature(Feature):
     def length(self):
         return 1
 
+
+class DiscretizedMaxHeightFeature(Feature):
+    def __init__(self,bins):
+        self.bin_pairs = list(enumerate([float(v) for v in bins]))
+
+    def f(self,s,a):
+        def score(b):
+            if b.sum()==0:
+                return 0
+            else:
+                row_indices = np.nonzero(b)[0]
+                return b.shape[0]-row_indices.min()
+                
+        def soft_discretize(score,bin_pairs):
+            scores = [0] * len(bin_pairs)
+            upper_bin_id,upval = next((i,v) for i,v in bin_pairs if raw_score<=v)
+            lower_bin_id,lowval = next((i,v) for i,v in reversed(bin_pairs) if raw_score>=v)
+            
+            pctlower = (raw_score - lowval) / (upval - lowval)
+            pctupper = 1.0 - pctlower
+            
+            scores[upper_bin_id] = pctupper
+            scores[lower_bin_id] = pctlower
+            return scores
+
+        def hard_discretize(score,bin_pairs):
+            scores = [0] * len(bin_pairs)
+            upper_bin_id,upval = next((i,v) for i,v in bin_pairs if raw_score<=v)
+            scores[upper_bin_id] = 1.0
+            return scores
+            
+
+        bitmap = a.get_prefinal_bitmap()
+        raw_score = score(bitmap)
+        return hard_discretize(raw_score, self.bin_pairs)
+        
+
+    def length(self):
+        return len(self.bin_pairs)
+
+class DiscretizedMeanHeightFeature(Feature):
+    def __init__(self,bins):
+        self.bin_pairs = list(enumerate(bins))
+
+    def f(self,s,a):
+        def score(b):
+            if b.sum()==0:
+                return 0.0001
+            else:
+                row_indices = np.nonzero(b)[0]
+                return b.shape[0]-row_indices.mean()
+
+        def soft_discretize(score,bin_pairs):
+            scores = [0] * len(bin_pairs)
+            upper_bin_id,upval = next((i,v) for i,v in bin_pairs if raw_score<=v)
+            lower_bin_id,lowval = next((i,v) for i,v in reversed(bin_pairs) if raw_score>=v)
+
+            if upper_bin_id == lower_bin_id:
+                scores[upper_bin_id] = 1.0
+                return scores
+            else:
+                pctlower = (raw_score - lowval) / (upval - lowval)
+                pctupper = 1.0 - pctlower
+                
+                scores[upper_bin_id] = pctupper
+                scores[lower_bin_id] = pctlower
+                return scores
+
+        scores = [0] * len(self.bin_pairs)
+        bitmap = a.get_prefinal_bitmap()
+        raw_score = score(bitmap)
+        return soft_discretize(raw_score, self.bin_pairs)
+
+    def length(self):
+        return len(self.bin_pairs)
+
+class MeanHeightFeature(Feature):
+    def __init__(self):
+        pass
+
+    def f(self,s,a):
+        def score(b):
+            if b.sum()==0:
+                return 0
+            else:
+                row_indices = np.nonzero(b)[0]
+                return b.shape[0]-row_indices.mean()
+
+        bitmap = a.get_prefinal_bitmap()
+        return [score(bitmap)]
+
+    def length(self):
+        return 1
+
+class MeanHeightSquaredFeature(Feature):
+    def __init__(self):
+        pass
+
+    def f(self,s,a):
+        def score(b):
+            if b.sum()==0:
+                return 0
+            else:
+                row_indices = np.nonzero(b)[0]
+                return b.shape[0]-row_indices.mean()
+
+        bitmap = a.get_prefinal_bitmap()
+        return [score(bitmap)**2]
+
+    def length(self):
+        return 1
+
+class RowLengthHistogramFeature(Feature):
+    def __init__(self,width):
+        self.width=width
+
+    def f(self,s,a):
+        bitmap = a.get_prefinal_bitmap()
+        rowlengths = bitmap.sum(axis=1).astype(np.int_)
+        hist = [0] * (self.width)
+        for i in rowlengths:
+            hist[i] += 1
+        return hist
+
+    def length(self):
+        return self.width
+
+class ColHeightHistogramFeature(Feature):
+    def __init__(self,height):
+        self.height=height
+
+    def f(self,s,a):
+        bitmap = a.get_prefinal_bitmap()
+        H = bitmap.shape[0]
+        assert H == self.height
+        colheights = bitmap.sum(axis=0).astype(np.int_)
+        hist = [0] * (H+1)
+        for i in colheights:
+            hist[i] += 1
+        return hist
+
+    def length(self):
+        return self.height+1
+
 class TrappedSquaresFeature(Feature):
     def __init__(self):
         pass
@@ -254,7 +398,7 @@ class CompactnessFeature(Feature):
         pass
 
     def f(self,s,a):
-        bitmap = a.get_final_bitmap()
+        bitmap = a.get_prefinal_bitmap()
 
         if bitmap.sum() == 0:
             return [1.0]
@@ -307,4 +451,7 @@ class FeatureFunctionVector(object):
 
     def length(self):
         return sum(f.length() for f in self.functions)
-            
+
+    def names_and_lengths(self):
+        return list(zip(self.names, [f.length() for f in self.functions]))
+

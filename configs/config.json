@@ -3,7 +3,7 @@
 	"t_fall": 3,
 
 	"arena": {
-	    "shape": [15,6]
+	    "shape": [12,10]
 	},
 	"shapes": {
             "O": ["0000,0110,0110,0000"],
@@ -18,17 +18,30 @@
             "move_or_rotate": 0.0,
             "invalid_move": 0.0,
             "time_step": 0.0,
-            "rows_cleared": [1,1,1,1],
+            "rows_cleared": [1,2,3,4],
             "game_over": -100
 	}
     },
     "agent": {
+	"type": "rl",
 	"model": {
 	    "features": {
-		"ColTransitionsFeature": { },
-		"MaxHeightFeature": { },
-		"MaxHeightSquaredFeature": { },
-		"TrappedSquaresFeature": { }
+		"DiscretizedMaxHeightFeature": { "bins":  [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
+		"DiscretizedMeanHeightFeature": { "bins": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
+		"RowLengthHistogramFeature": { "width": 20 }
+	    },
+	    "initial_weights": {
+		"type": "zero",
+		"values": {
+		    "ColTransitionsFeature": [-1.0],
+		    "CompactnessFeature": [1.0],
+		    "ConstantOneFeature": [1.0],
+		    "MaxHeightFeature": [-1.0],
+		    "MaxHeightSquaredFeature": [-1.0],
+		    "RowLengthHistogramFeature": [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+		    "ColHeightHistogramFeature": [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+		    "TrappedSquaresFeature": [-1.0]
+		}
 	    }
 	},
 	"learner": {
@@ -37,10 +50,11 @@
 		"params": {
 		}
 	    },
-	    "max_history_len": 30,
-	    "eligibility_trace_lambda": 0.1,
-	    "discount_gamma": 0.5,
-	    "learning_rate": 0.0003,
+	    "max_history_len": 12,
+	    "eligibility_trace_lambda": 0.7,
+	    "discount_gamma": 0.9,
+	    "learning_rate": 0.1,
+	    "delta_norm_clip": 50.0,
 	    "learning_rate_decay": 0.999
 	},
 	"actor": {
@@ -49,6 +63,10 @@
 		"epsilon": 0.00
 	    }
 	}
+    },
+    "engine": {
+	"fps": 10000,
+	"show": false
     }
 }
 

@@ -1,6 +1,7 @@
 import environment
 from placement import PlacementEnumerator
 import numpy as np
+import logging
 
 
 class LowestCenterOfGravityAgent(object):
@@ -21,11 +22,12 @@ class LowestCenterOfGravityAgent(object):
             self.queued_actions = self.queued_actions[1:]
             return a
         else:
-            a_s = self.penum._get_actionseq_finalstate_pairs(s)
-            assert(len(a_s)>0)
-            amin,smin = min(a_s, key=lambda x:score(x[1].arena.bitmap))
+            a_s_p = self.penum._get_actionseq_finalstate_pairs(s)
+            assert(len(a_s_p)>0)
+            amin,smin,_ = min(a_s_p, key=lambda x:score(x[1].arena.bitmap))
             self.queued_actions = amin[1:]
             return amin[0]
                         
-    def observe_sars_tuple(self,s,a,r,sprime):
+    def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
+        logging.info("REWARD: {}".format(r))
         pass

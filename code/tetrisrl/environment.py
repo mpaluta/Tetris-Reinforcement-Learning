@@ -162,12 +162,27 @@ class LocatedShapeGenerator(object):
         osi = self.random.randrange(s.num_orientations())
         os = s.oshapes[osi]
 
-        cmin = 0 - os.cmin()
-        cmax = self.arena_dims[1] - 1 - os.cmax()
-        r = 0 - os.rmin()
+        rmin,rmax,cmin,cmax = self.get_start_position_bounds(os)
 
-        loc = np.array([r, self.random.randrange(cmin,cmax+1)])
+        loc = np.array([self.random.randrange(rmin,rmax), self.random.randrange(cmin,cmax)])
         return LocatedShape(loc,s,osi)
+
+    def get_start_position_bounds(self,os):
+        cmin = 0 - os.cmin()
+        cmax = self.arena_dims[1] - os.cmax()
+        r = 0 - os.rmin()
+        return (r,r+1,cmin,cmax)
+
+    def all_possibilities(self):
+        lshapes = []
+        for s in self.shapes:
+            for i in range(s.num_orientations()):
+                os = s.oshapes[i]
+                rmin,rmax,cmin,cmax = self.get_start_position_bounds(os)
+                all_rc_pairs = itertools.product(range(rmin,rmax),range(cmin,cmax))
+                for rc in all_rc_pairs:
+                    lshapes.append(LocatedShape(np.array(rc), s, i))
+        return lshapes
 
 
 class RewardStructure(object):
