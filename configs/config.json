@@ -3,7 +3,7 @@
 	"t_fall": 3,
 
 	"arena": {
-	    "shape": [12,10]
+	    "shape": [20,10]
 	},
 	"shapes": {
             "O": ["0000,0110,0110,0000"],
@@ -54,7 +54,7 @@
 	    "eligibility_trace_lambda": 0.7,
 	    "discount_gamma": 0.9,
 	    "learning_rate": 0.1,
-	    "delta_norm_clip": 50.0,
+	    "delta_norm_clip": 500.0,
 	    "learning_rate_decay": 0.999
 	},
 	"actor": {
@@ -66,7 +66,7 @@
     },
     "engine": {
 	"fps": 10000,
-	"show": false
+	"show": true
     }
 }
 

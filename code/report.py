@@ -19,28 +19,39 @@ def windowed_average(a, wsize):
 def read_file(fn):
     r = []
     d = []
+    absd = []
     with open(fn) as fin:
         for line in fin:
             tokens = line.strip().split()
             if line.startswith("INFO:root:DELTA:"):
                 d.append(float(tokens[-1]))
+                absd.append(abs(float(tokens[-1])))
             if line.startswith("INFO:root:REWARD:"):
                 r.append(float(tokens[-1]))
-    return (r,d)
+    return (r,d,absd)
 
 def save_results(fn,outprefix):
     r_win = 25000
     d_win = 500
+    absd_win = 500
 
-    r,d = read_file(sys.argv[1])
+    r,d,absd = read_file(sys.argv[1])
     winrx,winry = windowed_average(r, r_win)
     windx,windy = windowed_average(d, d_win)
+    winabsdx,winabsdy = windowed_average(absd, absd_win)
     
     plt.plot(windx,windy)
     plt.ylabel("Delta")
     plt.xlabel("Timestep") 
     plt.title("Trailing average of {} latest delta values".format(d_win))
     plt.savefig("{}.delta.png".format(outprefix))
+    plt.clf()
+
+    plt.plot(winabsdx,winabsdy)
+    plt.ylabel("Delta magnitude")
+    plt.xlabel("Timestep") 
+    plt.title("Trailing average of {} latest delta magnitudes".format(absd_win))
+    plt.savefig("{}.abs_delta.png".format(outprefix))
     plt.clf()
 
     plt.plot(winrx,winry)
