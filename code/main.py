@@ -12,6 +12,7 @@ import sys
 import logging
 import os
 import shutil
+import time
 
 
 class Globals(object):
@@ -61,6 +62,7 @@ class Engine(object):
     def loop(self):
         self.draw()
         t = 0
+        start = time.clock()
         while True:
             t += 1
             if t > self.max_time:
@@ -78,7 +80,8 @@ class Engine(object):
             self.agent.observe_sars_tuple(self.s,a,r,sprime,pfbm=pfbm)
             self.s = sprime
             self.draw()
-            print "Total Reward: {:.2f}  {:.2f}".format(self.total_pos_r, self.total_neg_r)
+            duration = time.clock()-start
+            print "Runtime={:.2f}s  T={}  Total Reward: {:.2f}  {:.2f}".format(duration, t, self.total_pos_r, self.total_neg_r)
             
     def draw(self):
         if not self.show:
