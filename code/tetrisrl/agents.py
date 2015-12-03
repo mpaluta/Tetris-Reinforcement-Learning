@@ -1,5 +1,7 @@
 import pygame
+import random
 from environment import Action
+import logging
 
 class HumanAgent(object):
     def __init__(self):
@@ -24,16 +26,26 @@ class HumanAgent(object):
                 pass
         return action
 
-    def observe_sars_tuple(self,sars):
+    def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
+        logging.info("REWARD: {}".format(r))
+        pass
+
+    def save_model(self,fn):
         pass
 
 
 class RandomAgent(object):
     actions=None
     def __init__(self):
-        self.actions = [Action.NoMove, Action.Down, Action.Left, Action.Right, Action.ClockwiseRotate]
+        self.actions = [Action.NoMove, Action.Left, Action.Right, Action.ClockwiseRotate]
+
     def act(self,s):
         return random.choice(self.actions)
-    def observe_sars_tuple(self,sars):
+
+    def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
+        logging.info("REWARD: {}".format(r))
+        pass
+
+    def save_model(self,fn):
         pass
 

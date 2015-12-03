@@ -4,6 +4,7 @@ import numpy as np
 import itertools
 
 
+
 class Backpointer(object):
     def __init__(self, a, ss):
         self.a = a
@@ -242,11 +243,24 @@ class PlacementAction(object):
         return self.final_state.arena.bitmap
 
 
+class FastSearch(object):
+    def __init__(self):
+        pass
+
+    def search(self, e, s):
+        pass
+        # TODO: return actionseq,finalstate,pfbm tuples
+        #os = 
+
 class PlacementEnumerator(object):
     def __init__(self, e):
         self.e = e
-        # TODO: simple or regular?
-        self.search = SimpleSearch()
+        if e.paths_allowed == "simple":
+            self.search = SimpleSearch()
+        elif e.paths_allowed == "all":
+            self.search = Search()
+        else:
+            raise Exception("Unexpected value for paths_allowed: {}".format(e.paths_allowed))
 
     def _get_actionseq_finalstate_pairs(self, s):
         return self.search.search(self.e, s)

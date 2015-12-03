@@ -208,7 +208,6 @@ class QLearningAgent(object):
         self.QL = QLearner(self.QM, config["learner"])
         self.QA = json_descr_to_class(config["actor"], QM=self.QM, e=e)
 
-
     def act(self,s):
         return self.QA.act(s)
 

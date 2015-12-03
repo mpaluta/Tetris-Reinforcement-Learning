@@ -146,6 +146,18 @@ class State(object):
         b=self.arena.copy()
         return State(self.t, b, self.lshape)
 
+    def serialize_json(self):
+        ao = self.arena.bitmap.tolist()
+        lso = None # TODO fix this
+        return {"arena":ao, "lshape":lso, "t": self.t}
+
+    @classmethod
+    def deserialize_json(cls, o):
+        t = o["t"]
+        arena = Arena(bitmap=np.asarray(o["arena"]))
+        lshape = o["lshape"] # TODO fix this
+        return cls(t,arena,lshape)
+
 
 class LocatedShapeGenerator(object):
     shapes=None
@@ -220,6 +232,7 @@ class Environment(object):
         self.shapegen = LocatedShapeGenerator(self.shapes, self.arena_dims)
         self.K = config["t_fall"]
         self.R = RewardStructure(config["rewards"])
+        self.paths_allowed = config["paths_allowed"]
 
     def initial_state(self):
         s = State(0, Arena(shape=self.arena_dims), self.shapegen.generate())

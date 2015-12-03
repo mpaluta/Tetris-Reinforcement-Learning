@@ -1,6 +1,7 @@
 {
     "environment": {
 	"t_fall": 3,
+	"paths_allowed": "all",
 
 	"arena": {
 	    "shape": [20,10]
@@ -18,21 +19,24 @@
             "move_or_rotate": 0.0,
             "invalid_move": 0.0,
             "time_step": 0.0,
-            "rows_cleared": [1,2,3,4],
+            "rows_cleared": [1,8,27,64],
             "game_over": -100
 	}
     },
     "agent": {
-	"type": "rl",
+	"type": "random",
 	"model": {
 	    "features": {
-		"DiscretizedMaxHeightFeature": { "bins":  [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
-		"DiscretizedMeanHeightFeature": { "bins": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
-		"RowLengthHistogramFeature": { "width": 20 }
+		"MaxHeightFeature": { "degree":  5 },
+		"MeanHeightFeature": { "degree": 5 },
+		"TrappedSquaresFeature": { "degree": 5 },
+		"RowStateHistogramFeature": { "width": 10, "degree": 2 }
 	    },
 	    "initial_weights": {
 		"type": "zero",
 		"values": {
+		    "DiscretizedMaxHeightFeature": { "bins":  [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
+		    "DiscretizedMeanHeightFeature": { "bins": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,1000] },
 		    "ColTransitionsFeature": [-1.0],
 		    "CompactnessFeature": [1.0],
 		    "ConstantOneFeature": [1.0],
@@ -50,24 +54,27 @@
 		"params": {
 		}
 	    },
-	    "max_history_len": 12,
-	    "eligibility_trace_lambda": 0.7,
+	    "max_history_len": 20,
+	    "eligibility_trace_lambda": 0.8,
 	    "discount_gamma": 0.9,
 	    "learning_rate": 0.1,
 	    "delta_norm_clip": 500.0,
-	    "learning_rate_decay": 0.999
+	    "learning_rate_decay": 0.9994
 	},
 	"actor": {
 	    "type": "FullPlacementActor",
 	    "params": {
-		"epsilon": 0.00
+		"epsilon": 0.0,
+		"teacher_iters": 0
 	    }
 	}
     },
     "engine": {
 	"fps": 10000,
 	"show": true,
-	"max_time": 60000
+	"max_time": 150000,
+	"log_observations": true,
+	"replay_observations": []
     }
 }
 

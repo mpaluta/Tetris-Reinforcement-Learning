@@ -15,20 +15,6 @@ class Feature(object):
     def f(self,s,a):
         raise Exception("Cannot instantiate abstract Feature class")
 
-class MinorActionCounterFeature(Feature):
-    def __init__(self):
-        self.num_actions = len(environment.all_actions)
-
-    def f(self,s,a):
-        v = [0] * self.num_actions
-        for i in a.minor_actions:
-            assert i < self.num_actions and i>0
-            v[i] += 1
-        return v
-
-    def length(self):
-        return self.num_actions
-
 class ConstantOneFeature(Feature):
     def __init__(self):
         pass
@@ -38,41 +24,6 @@ class ConstantOneFeature(Feature):
 
     def length(self):
         return 1
-
-class ShortestRowCompletionLengthFeature(Feature):
-    def __init__(self):
-        pass
-
-    def f(self,s,a):
-        bitmap = a.get_prefinal_bitmap()
-        W = bitmap.shape[1]
-        ws = bitmap.sum(axis=1)
-        maxw = ws.max()
-        return [float(W-maxw)]
-
-    def length(self):
-        return 1
-
-class MaxHeightChangeFeature(Feature):
-    def __init__(self):
-        pass
-
-    def h(self,b):
-        H = b.shape[0]
-        minrow = H if b.sum()==0 else b.nonzero()[0].min()
-        maxheight = H - minrow
-        return maxheight
-
-    def f(self,s,a):
-        final_h = self.h(a.get_final_bitmap())
-        initial_h = self.h(s.arena.bitmap)
-
-        return [final_h - initial_h]
-
-
-    def length(self):
-        return 1
-
 
 class MaxHeightFeature(Feature):
     def __init__(self,degree):
@@ -290,7 +241,33 @@ class TrappedSquaresFeature(Feature):
         def bitmap_num_trapped(b):
             return sum(col_num_trapped(b[:,c]) for c in range(b.shape[1]))
 
-        bitmap = a.get_prefinal_bitmap()
+        bitmap = a.get_final_bitmap()
+        n = bitmap_num_trapped(bitmap)
+        pct = float(n) / float(bitmap.size)
+        return [pct ** k for k in range(1,self.degree+1)]
+
+    def length(self):
+        return self.degree
+
+
+class SquareTypesFeature(Feature):
+    def __init__(self,degree):
+        self.degree=degree
+
+    def f(self,s,a):
+        def col_num_trapped(col):
+            nz = np.nonzero(col)[0]
+            if nz.size == 0: 
+                return 0
+            top = nz.min()
+            h = col.size - top
+            nnz = nz.size
+            return h-nnz
+
+        def bitmap_num_trapped(b):
+            return sum(col_num_trapped(b[:,c]) for c in range(b.shape[1]))
+
+        bitmap = a.get_final_bitmap()
         n = bitmap_num_trapped(bitmap)
         pct = float(n) / float(bitmap.size)
         return [pct ** k for k in range(1,self.degree+1)]

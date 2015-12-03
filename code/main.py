@@ -6,6 +6,7 @@ from tetrisrl.environment import Environment,Action
 from tetrisrl.baseline import LowestCenterOfGravityAgent
 from tetrisrl.agents import HumanAgent, RandomAgent
 from tetrisrl.rl import QLearningAgent
+from tetrisrl.serialize import ObservationSerializer
 import json
 import random
 import sys
@@ -45,6 +46,17 @@ class Engine(object):
         self.show = config["show"]
         self.max_time = config["max_time"]
         self.output_dir = output_dir
+        self.oserializer = ObservationSerializer()
+
+        if config["log_observations"]:
+            self.obs_log_file = open("{}/observations.json".format(output_dir),"w")
+        else:
+            self.obs_log_file = None
+
+        if config["replay_observations"]:
+            for i in range(config["replay_count"]):
+                for fn in config["replay_observations"]:
+                    self.replay_observations(fn)
 
         if self.show:
             pygame.init()
@@ -53,6 +65,13 @@ class Engine(object):
             self.clock = pygame.time.Clock()
             pygame.display.set_caption("Tetris")
             self.draw()
+
+    def replay_observations(self, fn):
+        with open(fn) as fin:
+            print "Replaying from file: {}...".format(fn)
+            for l in fin:
+                s,a,r,sprime,pfbm = self.oserializer.deserialize_json(json.loads(l))
+                self.agent.observe_sars_tuple(s,a,r,sprime,pfbm=pfbm)
 
     def detect_quit(self):
         if self.show:
@@ -81,6 +100,10 @@ class Engine(object):
                 self.total_pos_r += r
             else:
                 self.total_neg_r += r
+
+            if self.obs_log_file:
+                self.obs_log_file.write("{}\n".format(json.dumps(self.oserializer.serialize_json(self.s,a,r,sprime,pfbm=pfbm))))
+
             self.agent.observe_sars_tuple(self.s,a,r,sprime,pfbm=pfbm)
             self.s = sprime
             self.draw()
