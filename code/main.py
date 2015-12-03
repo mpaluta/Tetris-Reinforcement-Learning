@@ -35,7 +35,7 @@ class Engine(object):
     agent=None
     max_time=None
     
-    def __init__(self, environment,agent,config):
+    def __init__(self, environment,agent,config,output_dir):
         self.environment=environment
         self.s = self.environment.initial_state()
         self.total_pos_r = 0.0
@@ -44,6 +44,7 @@ class Engine(object):
         self.fps = config["fps"]
         self.show = config["show"]
         self.max_time = config["max_time"]
+        self.output_dir = output_dir
 
         if self.show:
             pygame.init()
@@ -65,6 +66,9 @@ class Engine(object):
         start = time.clock()
         while True:
             t += 1
+            if t % 1000 == 0:
+                self.agent.save_model("{}/model.{:06d}iters".format(self.output_dir, t))
+
             if t > self.max_time:
                 break
 
@@ -148,6 +152,6 @@ elif agent_type == "random":
 else:
     raise Exception("Unknown agent type: {}".format(config["agent"]["type"]))
 
-engine = Engine(e,agent,config["engine"])
+engine = Engine(e,agent,config["engine"],output_dir)
 engine.loop()
 

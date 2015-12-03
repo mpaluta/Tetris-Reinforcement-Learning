@@ -75,18 +75,19 @@ class MaxHeightChangeFeature(Feature):
 
 
 class MaxHeightFeature(Feature):
-    def __init__(self):
-        pass
+    def __init__(self,degree):
+        self.degree=degree
 
     def f(self,s,a):
-        bitmap = a.get_final_bitmap()
+        bitmap = a.get_prefinal_bitmap()
         H = bitmap.shape[0]
         minrow = H if bitmap.sum()==0 else bitmap.nonzero()[0].min()
-        maxheight = H - minrow
-        return [maxheight]
+        hpct = float(H - minrow)/float(H)
+
+        return [hpct**i for i in range(1,self.degree+1)]
 
     def length(self):
-        return 1
+        return self.degree
 
 
 class DiscretizedMaxHeightFeature(Feature):
@@ -165,8 +166,8 @@ class DiscretizedMeanHeightFeature(Feature):
         return len(self.bin_pairs)
 
 class MeanHeightFeature(Feature):
-    def __init__(self):
-        pass
+    def __init__(self,degree):
+        self.degree = degree
 
     def f(self,s,a):
         def score(b):
@@ -177,10 +178,12 @@ class MeanHeightFeature(Feature):
                 return b.shape[0]-row_indices.mean()
 
         bitmap = a.get_prefinal_bitmap()
-        return [score(bitmap)]
+        H = float(bitmap.shape[0])
+        scr = float(score(bitmap))/float(H)
+        return [scr**i for i in range(1,self.degree+1)]
 
     def length(self):
-        return 1
+        return self.degree
 
 class MeanHeightSquaredFeature(Feature):
     def __init__(self):
@@ -215,6 +218,44 @@ class RowLengthHistogramFeature(Feature):
     def length(self):
         return self.width
 
+class RowStateHistogramFeature(Feature):
+    def __init__(self,width,degree):
+        self.width=width
+        self.degree=degree
+
+    def f(self,s,a):
+        bitmap = a.get_prefinal_bitmap().copy()
+
+        # Set blocked squares to have cell value 2
+        for c in range(bitmap.shape[1]):
+            flag=False
+            for r in range(bitmap.shape[0]):
+                if bitmap[r,c]==1:
+                    flag=True
+                elif flag:
+                    bitmap[r,c] = 2
+
+        zeros = (bitmap==0).sum(axis=1, keepdims=True)
+        ones = (bitmap==1).sum(axis=1, keepdims=True)
+        twos = (bitmap==2).sum(axis=1, keepdims=True)
+        M = np.hstack((zeros,ones,twos))
+
+        
+        H = bitmap.shape[0]
+        C = bitmap.shape[1]
+        assert not np.any(M>C)
+        assert np.all(M.sum(axis=1)==C)
+                          
+        hist = [0] * ((C+1) * (C+1))
+        for row in M:
+            index = row[0]*(C+1) + row[1]
+            hist[index] += 1.0/H
+
+        return list(itertools.chain(*([i**k for i in hist] for k in range(1,self.degree+1))))
+
+    def length(self):
+        return (self.width+1)*(self.width+1)*self.degree
+
 class ColHeightHistogramFeature(Feature):
     def __init__(self,height):
         self.height=height
@@ -233,25 +274,29 @@ class ColHeightHistogramFeature(Feature):
         return self.height+1
 
 class TrappedSquaresFeature(Feature):
-    def __init__(self):
-        pass
+    def __init__(self,degree):
+        self.degree=degree
 
     def f(self,s,a):
-        bitmap = a.get_final_bitmap()
-        H = bitmap.shape[0]
-        W = bitmap.shape[1]
-        badcount=0
-        for c in range(W):
-            count = 0
-            for r in range(H-1,-1,-1):
-                if bitmap[r,c]==0:
-                    count += 1
-                else:
-                    badcount += count
-        return [badcount]
+        def col_num_trapped(col):
+            nz = np.nonzero(col)[0]
+            if nz.size == 0: 
+                return 0
+            top = nz.min()
+            h = col.size - top
+            nnz = nz.size
+            return h-nnz
+
+        def bitmap_num_trapped(b):
+            return sum(col_num_trapped(b[:,c]) for c in range(b.shape[1]))
+
+        bitmap = a.get_prefinal_bitmap()
+        n = bitmap_num_trapped(bitmap)
+        pct = float(n) / float(bitmap.size)
+        return [pct ** k for k in range(1,self.degree+1)]
 
     def length(self):
-        return 1
+        return self.degree
 
 class MaxHeightSquaredFeature(Feature):
     def __init__(self):

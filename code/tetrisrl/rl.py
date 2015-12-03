@@ -1,6 +1,7 @@
 import environment
 from placement import PlacementEnumerator, PlacementAction
 from features import FeatureFunctionVector
+from baseline import LowestCenterOfGravityAgent
 import collections
 import numpy as np
 import sys
@@ -51,6 +52,9 @@ class QModel(object):
     def update_weights(self, delta):
         self.weights += delta
 
+    def save_model(self, fn):
+        np.savetxt(fn, self.weights)
+
 
 class PartiallyCompletedPlacement(object):
     def __init__(self, p):
@@ -71,13 +75,18 @@ class PartiallyCompletedPlacement(object):
         return self.p.minor_actions[self.i-1]
 
 class FullPlacementActor(object):
-    def __init__(self, QM, e, epsilon):
+    def __init__(self, teacher_iters, QM, e, epsilon):
         self.eps = epsilon
         self.placement = None
         self.penum = PlacementEnumerator(e)
+        self.teacher_iters = teacher_iters
+        self.teacher = LowestCenterOfGravityAgent(e)
         self.QM = QM
 
     def act(self, s):
+        if s.t < self.teacher_iters:
+            return self.teacher.act(s)
+
         if self.placement is None or not self.placement.is_incomplete():
             choices = self.penum.get_placement_actions(s)
             if random.random()<self.eps:
@@ -171,12 +180,12 @@ class QLearner(object):
             qact = r + self.gamma * qprime
 
             delta = qact - q
+            self.delta_logger.append(delta)
             logging.info("DELTA: {}".format(delta))
             normdelta = np.linalg.norm(delta)
             if normdelta > self.delta_norm_clip:
                 delta = delta * (self.delta_norm_clip / normdelta)
 
-            self.delta_logger.append(delta)
             avgabsdelta = sum([abs(v) for v in self.delta_logger])/len(self.delta_logger)
             avgdelta = sum(self.delta_logger)/len(self.delta_logger)
     
@@ -210,8 +219,5 @@ class QLearningAgent(object):
     def print_state(self):
         self.QM.print_state()
 
-
-    
-        
-        
-
+    def save_model(self,fn):
+        self.QM.save_model(fn)

@@ -78,9 +78,9 @@ class SimpleTransition(object):
         if ss.stage==0:
             possible_actions = [(Action.Left,1),(Action.Right,2),(Action.ClockwiseRotate,0),(Action.Down,3)]
         elif ss.stage==1:
-            possible_actions = [(Action.Left,1),(Action.Down,3)]
+            possible_actions = [(Action.Left,1),(Action.ClockwiseRotate,1),(Action.Down,3)]
         elif ss.stage==2:
-            possible_actions = [(Action.Right,2),(Action.Down,3)]
+            possible_actions = [(Action.Right,2),(Action.ClockwiseRotate,2),(Action.Down,3)]
         elif ss.stage==3:
             possible_actions = [(Action.NoMove,3)]
 
