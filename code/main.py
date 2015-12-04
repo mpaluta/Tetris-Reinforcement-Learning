@@ -100,7 +100,12 @@ class Engine(object):
                     self.draw_bitmap(pfbm)
                     pygame.display.update()
                     self.clock.tick(6)
-            sprime,r,pfbm = self.environment.next_state_and_reward(self.s, a)
+            sprime,r,pfbm,rcounts = self.environment.next_state_and_reward(self.s, a)
+            if "rows_cleared" in rcounts:
+                logging.info("ROWS_CLEARED: {}".format(rcounts["rows_cleared"]))
+            if "game_over" in rcounts:
+                logging.info("GAME_OVER")
+
             if r > 0:
                 self.total_pos_r += r
             else:

@@ -1,0 +1,9 @@
+{
+    "agent/model/features/MaxHeightFeature/degree":  1,
+    "agent/model/features/MeanHeightFeature/degree":  1,
+    "agent/model/features/TrappedSquaresFeature/degree":  1,
+    "agent/model/features/SquareTypesFeature/degree":  1,
+    "agent/model/features/RowStateHistogramFeature/degree":  1,
+    "engine/show": false
+}
+

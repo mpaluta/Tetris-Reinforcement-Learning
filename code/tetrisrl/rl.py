@@ -86,6 +86,7 @@ class FullPlacementActor(object):
     def act(self, s, debug_mode=False):
         debug_info = {}
         if s.t < self.teacher_iters:
+            debug_info["pfbms"] = []
             return (self.teacher.act(s),debug_info)
 
         if self.placement is None or not self.placement.is_incomplete():
@@ -170,7 +171,6 @@ class QLearner(object):
             
     def learn(self):
         # SARSA with approximation and eligibility trace
-        # TODO: this code does not include discounting
         if len(self.items)>1:
             curr = self.items[-2]
             _next = self.items[-1]

@@ -1,6 +1,7 @@
 import random 
 import json
 import numpy as np
+import logging
 
 # Size of world
 # names of shapes
@@ -244,6 +245,8 @@ class Environment(object):
         sprime = s.copy()
         ls = s.lshape
         r = 0.0
+        rcounts = {}
+
         if a==Action.Left:
             r += self.R.move_or_rotate()
             ls = ls.left()
@@ -306,16 +309,18 @@ class Environment(object):
                     assert new_bitmap.shape == sprime.arena.bitmap.shape
                     sprime.arena.bitmap = new_bitmap
                     r += self.R.rows_cleared(num_cleared)
+                    rcounts["rows_cleared"] = num_cleared
                 
                 sprime.lshape = self.shapegen.generate()
                 if not sprime.arena.located_shape_valid(sprime.lshape):
                     sprime.arena.bitmap[:] = 0
                     sprime.lshape = self.shapegen.generate()
                     r += self.R.game_over()
+                    rcounts["game_over"] = 1
         sprime.t += 1
         r += self.R.time_step()
         
-        return (sprime,r,prefinal_bitmap)
+        return (sprime,r,prefinal_bitmap,rcounts)
 
 
 all_actions=list(range(5))

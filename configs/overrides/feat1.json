@@ -1,0 +1,7 @@
+{
+    "agent/model/features": {
+	"MeanHeightFeature": { "degree": 5 }
+    },
+    "engine/show": true
+}
+

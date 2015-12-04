@@ -41,7 +41,7 @@ class Transition(object):
             return []
         results = []
         for a in environment.all_actions:
-            sprime, r, pfbm = self.e.next_state_and_reward(ss.s,a)
+            sprime, r, pfbm,_ = self.e.next_state_and_reward(ss.s,a)
             results.append(SearchState(ss.t+1, sprime, r+ss.r, Backpointer(a, ss), pfbm))
         #print "successors_results = {}".format(results)
         return results
@@ -86,7 +86,7 @@ class SimpleTransition(object):
             possible_actions = [(Action.NoMove,3)]
 
         for a,nextstage in possible_actions:
-            sprime, r, pfbm = self.e.next_state_and_reward(ss.s,a)
+            sprime, r, pfbm, _ = self.e.next_state_and_reward(ss.s,a)
             results.append(SimpleSearchState(ss.t+1, sprime, r+ss.r, Backpointer(a, ss), pfbm, nextstage))
         return results
 

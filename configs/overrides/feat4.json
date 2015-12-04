@@ -1,0 +1,10 @@
+{
+    "agent/model/features": {
+	"MaxHeightFeature": { "degree":  5 },
+	"MeanHeightFeature": { "degree": 5 },
+	"SquareTypesFeature": { "degree": 2, "height": 15 },
+	"TrappedSquaresFeature": { "degree": 5 }
+    },
+    "engine/show": true
+}
+
