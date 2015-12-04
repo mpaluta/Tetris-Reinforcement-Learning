@@ -136,24 +136,6 @@ class MeanHeightFeature(Feature):
     def length(self):
         return self.degree
 
-class MeanHeightSquaredFeature(Feature):
-    def __init__(self):
-        pass
-
-    def f(self,s,a):
-        def score(b):
-            if b.sum()==0:
-                return 0
-            else:
-                row_indices = np.nonzero(b)[0]
-                return b.shape[0]-row_indices.mean()
-
-        bitmap = a.get_prefinal_bitmap()
-        return [score(bitmap)**2]
-
-    def length(self):
-        return 1
-
 class RowLengthHistogramFeature(Feature):
     def __init__(self,width):
         self.width=width
@@ -251,29 +233,34 @@ class TrappedSquaresFeature(Feature):
 
 
 class SquareTypesFeature(Feature):
-    def __init__(self,degree):
+    def __init__(self,degree, height):
         self.degree=degree
+        self.height=height
 
     def f(self,s,a):
-        def col_num_trapped(col):
-            nz = np.nonzero(col)[0]
-            if nz.size == 0: 
-                return 0
-            top = nz.min()
-            h = col.size - top
-            nnz = nz.size
-            return h-nnz
+        def col_vec_num_trapped(col):
+            v = np.zeros(col.size+1)
+            k = 0
+            for i in range(col.size):
+                if col[i]==1:
+                    k += 1
+                    v[-1] += 1
+                else:
+                    v[k] += 1
+            return v
 
-        def bitmap_num_trapped(b):
-            return sum(col_num_trapped(b[:,c]) for c in range(b.shape[1]))
+        def bitmap_vec_num_trapped(b):
+            return sum(col_vec_num_trapped(b[:,c]) for c in range(b.shape[1]))
 
-        bitmap = a.get_final_bitmap()
-        n = bitmap_num_trapped(bitmap)
-        pct = float(n) / float(bitmap.size)
-        return [pct ** k for k in range(1,self.degree+1)]
+        bitmap = a.get_prefinal_bitmap()
+        v = bitmap_vec_num_trapped(bitmap)
+        
+        vnorm = v / float(bitmap.size)
+        vnorms = [vnorm**k for k in range(1,self.degree+1)]
+        return np.concatenate(vnorms)
 
     def length(self):
-        return self.degree
+        return self.degree * (self.height+1)
 
 class MaxHeightSquaredFeature(Feature):
     def __init__(self):

@@ -140,25 +140,49 @@ class Engine(object):
         pygame.display.update()
 
 
+# Modifies in place
+def override_config(c, o):
+    for key,val in o.iteritems():
+        keys = key.split("/")
+        p = c
+        for k in keys[:-1]:
+            p = p[k]
+        p[keys[-1]] = val
+
+def process_config(cf, of, sf):
+    with open(cf,"r") as fin:
+        config = json.load(fin)
+
+    if of.lower() != "none": 
+        with open(of,"r") as fin:
+            override = json.load(fin)
+        override_config(config, override)
+        
+    with open(sf, "w") as fout:
+        json.dump(config, fout, indent=4, sort_keys=True)
+
+    return config
+
 
 
 config_file = sys.argv[1]
-output_dir = sys.argv[2]
+config_override_file = sys.argv[2]
+output_dir = sys.argv[3]
 
+# output dir
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+# config
+saved_config_file = "{}/config".format(output_dir)
+config = process_config(config_file, config_override_file, saved_config_file)
+
+# log file
 log_file = "{}/log".format(output_dir)
 logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG)
 
-saved_config_file = "{}/config".format(output_dir)
-shutil.copyfile(config_file, saved_config_file)
 
-
-
-with open(config_file,"r") as fin:
-    config = json.load(fin)
-
+# initialize everything
 e = Environment(config["environment"])
 
 agent_type = config["agent"]["type"]
