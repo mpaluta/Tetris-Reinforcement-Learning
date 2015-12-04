@@ -1,0 +1,4 @@
+{
+    "agent/actor/params/teacher_iters": 30000,
+    "engine/show": false
+}
