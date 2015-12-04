@@ -1,13 +1,13 @@
-import pygame
 import random
 from environment import Action
 import logging
 
 class HumanAgent(object):
     def __init__(self):
+        import pygame
         pass
 
-    def act(self,s):
+    def act(self,s,debug_mode=False):
         action = Action.NoMove
         for event in pygame.event.get():
             if event.type == KEYDOWN or event.type==KEYUP:

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import pygame
-from pygame.locals import *
 from tetrisrl.environment import Environment,Action
 from tetrisrl.baseline import LowestCenterOfGravityAgent
 from tetrisrl.agents import HumanAgent, RandomAgent
@@ -52,6 +50,8 @@ class Engine(object):
                     self.replay_observations(fn)
 
         if self.show:
+            import pygame
+            from pygame.locals import *
             pygame.init()
             self.font = pygame.font.SysFont(None, 28)    
             self.screen=pygame.display.set_mode(Globals.SCREEN_DIMS,0,32)

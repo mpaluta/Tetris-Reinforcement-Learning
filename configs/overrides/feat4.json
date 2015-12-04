@@ -5,6 +5,6 @@
 	"SquareTypesFeature": { "degree": 2, "height": 15 },
 	"TrappedSquaresFeature": { "degree": 5 }
     },
-    "engine/show": true
+    "engine/show": false
 }
 

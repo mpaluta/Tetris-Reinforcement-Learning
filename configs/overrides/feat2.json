@@ -3,6 +3,6 @@
 	"MaxHeightFeature": { "degree":  5 },
 	"MeanHeightFeature": { "degree": 5 }
     },
-    "engine/show": true
+    "engine/show": false
 }
 

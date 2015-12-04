@@ -4,6 +4,6 @@
 	"MeanHeightFeature": { "degree": 5 },
 	"SquareTypesFeature": { "degree": 2, "height": 15 }
     },
-    "engine/show": true
+    "engine/show": false
 }
 
