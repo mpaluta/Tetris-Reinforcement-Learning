@@ -34,7 +34,7 @@
 		"RowStateHistogramFeature": { "width": 10, "degree": 2 }
 	    },
 	    "initial_weights": {
-		"type": "zero",
+		"type": "zero"
 	    }
 	},
 	"learner": {
@@ -54,7 +54,7 @@
 	    "type": "FullPlacementActor",
 	    "params": {
 		"epsilon": 0.0,
-		"teacher_iters": 10000
+		"teacher_iters": 0
 	    }
 	}
     },

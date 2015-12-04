@@ -39,8 +39,8 @@ class RandomAgent(object):
     def __init__(self):
         self.actions = [Action.NoMove, Action.Left, Action.Right, Action.ClockwiseRotate]
 
-    def act(self,s):
-        return random.choice(self.actions)
+    def act(self,s,debug_mode=False):
+        return (random.choice(self.actions),[])
 
     def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
         logging.info("REWARD: {}".format(r))
