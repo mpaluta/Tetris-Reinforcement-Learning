@@ -83,24 +83,31 @@ class FullPlacementActor(object):
         self.teacher = LowestCenterOfGravityAgent(e)
         self.QM = QM
 
-    def act(self, s):
+    def act(self, s, debug_mode=False):
+        debug_info = {}
         if s.t < self.teacher_iters:
-            return self.teacher.act(s)
+            return (self.teacher.act(s),debug_info)
 
         if self.placement is None or not self.placement.is_incomplete():
             choices = self.penum.get_placement_actions(s)
+            debug_info["pfbms"] = map(lambda x: x.pfbm, choices)
+
             if random.random()<self.eps:
                 p = random.choice(choices)
             else:
-                all_actions = map(lambda x: x.minor_actions,choices)
-                all_bitmaps = map(lambda x: x.final_state.arena.bitmap[-1].flatten(),choices)
-                initial_bitmaps = [s.arena.bitmap[-1].flatten() for i in all_bitmaps]
+                pass
+                #all_actions = map(lambda x: x.minor_actions,choices)
+                #all_bitmaps = map(lambda x: x.final_state.arena.bitmap[-1].flatten(),choices)
+                #initial_bitmaps = [s.arena.bitmap[-1].flatten() for i in all_bitmaps]
                 #print "{} choices. Bitmaps/Bitmaps/Betas: {}".format(len(choices), list(zip(initial_bitmaps,all_bitmaps,map(lambda x: self.QM.beta(s,x), choices))))
                 #raise Exception("TODO")
 
                 p = max(choices, key=lambda x: self.QM.q(s,x))
             self.placement = PartiallyCompletedPlacement(p)
-        return self.placement.incr_action()
+        else:
+            debug_info["pfbms"] = []
+
+        return (self.placement.incr_action(),debug_info)
 
 
 class FullPlacementEventAggregator(object):
@@ -208,8 +215,8 @@ class QLearningAgent(object):
         self.QL = QLearner(self.QM, config["learner"])
         self.QA = json_descr_to_class(config["actor"], QM=self.QM, e=e)
 
-    def act(self,s):
-        return self.QA.act(s)
+    def act(self,s, debug_mode=False):
+        return self.QA.act(s,debug_mode)
 
     def observe_sars_tuple(self,s,a,r,sprime,pfbm=None):
         self.QL.observe_sars_tuple(s,a,r,sprime,pfbm=pfbm)

@@ -19,8 +19,10 @@ class OrientedShape(object):
     def __init__(self, bitmap):
         self.bitmap = bitmap
         self._coords = np.transpose(np.nonzero(bitmap))
-        self._rbounds = np.array([self._coords[:,0].min(),self._coords[:,0].max()])
-        self._cbounds = np.array([self._coords[:,1].min(),self._coords[:,1].max()])
+        rcoords = self._coords[:,0]
+        ccoords = self._coords[:,1]
+        self._rbounds = np.array([rcoords.min(),rcoords.max()])
+        self._cbounds = np.array([ccoords.min(),ccoords.max()])
 
     def coords(self):
         return self._coords

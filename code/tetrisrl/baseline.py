@@ -22,6 +22,7 @@ class LowestCenterOfGravityAgent(object):
             self.queued_actions = self.queued_actions[1:]
             return a
         else:
+            logging.info("DELTA: 0")
             a_s_p = self.penum._get_actionseq_finalstate_pairs(s)
             assert(len(a_s_p)>0)
             amin,smin,pmin = min(a_s_p, key=lambda x:score(x[2]))

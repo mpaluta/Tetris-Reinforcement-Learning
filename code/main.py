@@ -28,14 +28,6 @@ class Colors(object):
     BLACK=(0,0,0)
 
 class Engine(object):
-    environment=None
-    surfaces=None
-    screen=None
-    clock=None
-    s=None
-    agent=None
-    max_time=None
-    
     def __init__(self, environment,agent,config,output_dir):
         self.environment=environment
         self.s = self.environment.initial_state()
@@ -47,6 +39,7 @@ class Engine(object):
         self.max_time = config["max_time"]
         self.output_dir = output_dir
         self.oserializer = ObservationSerializer()
+        self.debug_mode = config["debug_mode"]
 
         if config["log_observations"]:
             self.obs_log_file = open("{}/observations.json".format(output_dir),"w")
@@ -80,6 +73,12 @@ class Engine(object):
                 sys.exit()
 
     def loop(self):
+        def bitmap_mean_active_column(b):
+            if b.sum()==0:
+                return 0
+            else:
+                cols = b.nonzero()[1]
+                return cols.mean()
         self.draw()
         t = 0
         start = time.clock()
@@ -94,7 +93,13 @@ class Engine(object):
             if self.show:
                 self.clock.tick(self.fps)
             self.detect_quit()
-            a = self.agent.act(self.s)
+            a,debug_info = self.agent.act(self.s,debug_mode=self.debug_mode)
+            if self.debug_mode:
+                for pfbm in sorted(debug_info["pfbms"], cmp=lambda x,y: cmp(bitmap_mean_active_column(x),bitmap_mean_active_column(y))):
+                    self.clock.tick(6)
+                    self.draw_bitmap(pfbm)
+                    pygame.display.update()
+                    self.clock.tick(6)
             sprime,r,pfbm = self.environment.next_state_and_reward(self.s, a)
             if r > 0:
                 self.total_pos_r += r
@@ -115,16 +120,23 @@ class Engine(object):
             return
 
         self.screen.fill(Colors.BLACK)
+        w = 20
         b = self.s.arena.bitmap
         ls = self.s.lshape
-        w = 20
 
         text = self.font.render("Total Reward: {:.2f}  {:.2f}".format(self.total_pos_r, self.total_neg_r), True, Colors.WHITE, Colors.BLUE)
         textRect = text.get_rect()
         textRect.centerx = (w * b.shape[1]) + 250
         textRect.centery = self.screen.get_rect().centery
         self.screen.blit(text, textRect)
+        
+        self.draw_bitmap(b)
+        self.draw_lshape(ls)
 
+        pygame.display.update()
+
+    def draw_bitmap(self, b):
+        w = 20
         for r in range(b.shape[0]):
             for c in range(b.shape[1]):
                 rect = (w+(w*c),w+(w*r),w,w)
@@ -132,12 +144,14 @@ class Engine(object):
                     pygame.draw.rect(self.screen, Colors.GREEN, rect)
                 else:
                     pygame.draw.rect(self.screen, Colors.GRAY, rect)
-                    
+
+    def draw_lshape(self, ls):
+        w = 20
         for coord in ls.coords():
             r,c = (coord[0],coord[1])
             pygame.draw.rect(self.screen, Colors.BLUE, (w+(w*c),w+(w*r),w,w))
 
-        pygame.display.update()
+
 
 
 # Modifies in place

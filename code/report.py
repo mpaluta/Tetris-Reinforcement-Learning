@@ -31,7 +31,7 @@ def read_file(fn):
     return (r,d,absd)
 
 def save_results(dirname):
-    r_win = 25000
+    r_win = 10000
     d_win = 500
     absd_win = 500
 
