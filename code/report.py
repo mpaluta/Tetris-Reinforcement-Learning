@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+from collections import OrderedDict
 import argparse
 import sys
+import os
 
 def windowed_average(a, wsize):
     results = []
@@ -16,10 +18,11 @@ def windowed_average(a, wsize):
             s += a[i+1]
     return xs,results
 
-def read_file(fn):
+def read_windowed_stats(fn, windows):
     r = []
     d = []
     absd = []
+
     with open(fn) as fin:
         for line in fin:
             tokens = line.strip().split()
@@ -28,44 +31,50 @@ def read_file(fn):
                 absd.append(abs(float(tokens[-1])))
             if line.startswith("INFO:root:REWARD:"):
                 r.append(float(tokens[-1]))
-    return (r,d,absd)
+    return {
+        "reward": windowed_average(r, windows["reward"]), 
+        "delta": windowed_average(d, windows["delta"]),
+        "abs_delta": windowed_average(absd, windows["abs_delta"])
+        }
 
-def save_results(dirname):
-    r_win = 10000
-    d_win = 500
-    absd_win = 500
-
-    r,d,absd = read_file("{}/log".format(dirname))
-    winrx,winry = windowed_average(r, r_win)
-    windx,windy = windowed_average(d, d_win)
-    winabsdx,winabsdy = windowed_average(absd, absd_win)
-   
-    outprefix = "{}/plots".format(dirname)
- 
-    plt.plot(windx,windy)
-    plt.ylabel("Delta")
-    plt.xlabel("Timestep (block placements)") 
-    plt.title("Trailing average of {} latest delta values".format(d_win))
-    plt.savefig("{}.delta.png".format(outprefix))
+def make_plot(fn, xlabel, ylabel, title, stats, stat_name):
+    line_styles = ["r--", "b-.", "g:", "o-", "p:"]
+    for i,name in enumerate(stats.keys()):
+        print "name: {},   stat_name={}".format(name,stat_name)
+        xs,ys = stats[name][stat_name]
+        ls = line_styles[i]
+        plt.plot(xs,ys,ls)
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel) 
+    plt.title(title)
+    plt.legend()
+    plt.savefig(fn)
     plt.clf()
+    
 
-    plt.plot(winabsdx,winabsdy)
-    plt.ylabel("Delta magnitude")
-    plt.xlabel("Timestep (block placements)") 
-    plt.title("Trailing average of {} latest delta magnitudes".format(absd_win))
-    plt.savefig("{}.abs_delta.png".format(outprefix))
-    plt.clf()
+def plot_results(output_dir, input_dirs, windows):
 
-    plt.plot(winrx,winry)
-    plt.ylabel("Reward")
-    plt.xlabel("Timestep (game ticks)")
-    plt.title("Trailing average of {} latest reward values".format(r_win))
-    plt.savefig("{}.reward.png".format(outprefix))
-    plt.clf()
+    stats = OrderedDict()
+    for input_dir in input_dirs:
+        name = input_dir.split("/")[-1]
+        log = "{}/log".format(input_dir)
+        stats[name] = read_windowed_stats(log, windows)
+
+    make_plot("{}/delta.png", "Timestep (block placements)", "Delta", "Trailing average of {} latest delta values".format(windows["delta"]), stats, "delta")
+    make_plot("{}/abs_delta.png", "Timestep (block placements)", "Delta magnitude", "Trailing average of {} latest delta magnitudes".format(windows["abs_delta"]), stats, "abs_delta")
+    make_plot("{}/reward.png", "Timestep (game ticks)", "Reward", "Trailing average of {} latest reward values".format(windows["reward"]), stats, "reward")
 
 
 def main():
-    save_results(sys.argv[1])
+    output_dir = "plots/{}".format(sys.argv[1])
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    windows = {"delta": 500,
+               "abs_delta": 500,
+               "reward": 10000}
+
+    plot_results(output_dir, sys.argv[2:], windows)
 
 
 
